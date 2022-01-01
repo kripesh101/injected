@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Launch Program",
+            "command": "start ${workspaceFolder}\\bin\\main.exe",
+            "type": "shell"
+        },
+        {
+            "type": "shell",
+            "label": "Make current project for debug",
+            "command": "mingw32-make.exe",
+            "args": ["-B", "EXT_FLAGS=\"-g\""],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Make and run",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "command": [
+                "& 'mingw32-make.exe';",
+                "cd '.\\bin';",
+                "& '.\\main.exe'"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Delete build file",
+            "command": "del '.\\main.exe'",
+            "options": {
+                "cwd": "${workspaceFolder}\\bin"
+            },
+            "type": "shell"
+        }
+    ]
+}
