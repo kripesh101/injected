@@ -18,6 +18,8 @@ OBJS := $(patsubst $(SRC_DIR)\\%.cpp, $(OBJ_DIR)\\%.o, $(SRC_FILES))
 
 all: $(BIN_DIR)/$(EXECUTABLE)
 
+# Reference for future
+# Add -mwindows to end of linker command to create proper desktop app
 # Create main executable using all our object files
 $(BIN_DIR)/$(EXECUTABLE): $(OBJS)
 	$(CXX) -o $@ $^ -L$(LIB_DIR) $(LIBRARIES)
