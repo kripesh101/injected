@@ -1,7 +1,6 @@
 -CXX       		:= g++
 CXX_FLAGS 		:= -std=c++17 $(EXT_FLAGS)
-LIBRARIES   	:= -lsfml-graphics -lsfml-window -lsfml-system
-
+LIBRARIES   	:= -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 BIN_DIR     	:= bin
 SRC_DIR     	:= src
 OBJ_DIR			:= obj
