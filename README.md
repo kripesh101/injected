@@ -40,7 +40,7 @@ Default Level Directory: `assets/levels/default/`
 Optionally, you can specify the level you wish to create/modify by passing the path to level folder.
 
 Command: `main.exe -editor assets/levels/test_level_1/`.\
-Note: The level folder must exist or the level will not be saved. Also, **the `/` at the end is compulsory.**\
+**The `/` at the end is compulsory.**
 
 ## Editor Controls
 
@@ -58,6 +58,20 @@ Then, enter the tile number of the texture you want to use. Finally, press `Ente
 Now, you can click on the map to paint the tiles. To paint other tiles, you can use the input mode again. Alternatively, pressing `Alt` and scrolling with the mouse will allow you to cycle through the tile numbers.
 
 You can also press middle-click on any existing tile to choose that specfic tile's number as the current tile number.
+
+### Decorations
+
+Press `D` while in the input mode to switch to Decorations editing.
+
+Decorations are sprite objects on the level that can optionally have collision enabled on them. They can be placed anywhere on the map (even outside the tilemap boundaries).
+
+In the editor, they are shown as a preview. Press left click to place the decoration, and right click to delete a decoration.
+
+Press C to toggle collisions. You can hold Q at anytime to dim decorations that have collisions disabled.
+
+Holding `Alt` and scrolling the mouse wheel will cycle through all the available decorations.
+
+Similarly, Holding `Ctrl` and scrolling the mouse wheel will rotate the decoration.
 
 ## Saving Levels
 
