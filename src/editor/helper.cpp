@@ -1,11 +1,15 @@
 #include "helper.hpp"
 
-EditorMode EditorHelper::getCurrentMode() const{
+EditorMode EditorHelper::getCurrentMode() const {
     return currentMode;
 }
 
-int EditorHelper::getCurrentTileNumber() const{
+int EditorHelper::getCurrentTileNumber() const {
     return currentTileNum;
+}
+
+int EditorHelper::isCollisionEnabled() const {
+    return collisionEnabled;
 }
 
 bool EditorHelper::isUserEntering() const {
@@ -18,7 +22,7 @@ void EditorHelper::setStatus(EditorMode mode, int tileNum) {
     currentMode = mode;
 }
 
-void EditorHelper::updateText(sf::Text& text) const{
+void EditorHelper::updateText(sf::Text& text) const {
     sf::String str = "Current: ";
 
     textHelper(str, currentMode, currentTileNum);
@@ -26,23 +30,27 @@ void EditorHelper::updateText(sf::Text& text) const{
     if (userEntering) {
         str += "\nNext: ";
         textHelper(str, nextMode, nextTileNum);
-        if (nextMode == NONE) str += " [W - Wall, T - Level Tile, Esc - Cancel, Enter - Confirm]";
+        if (nextMode == NONE) str += " [W - Wall, T - Level, D - Decoration]";
     }
 
     text.setString(str);
 }
 
-void EditorHelper::textHelper(sf::String& str, EditorMode mode, int tileNum) {
+void EditorHelper::textHelper(sf::String& str, EditorMode mode, int tileNum) const {
+    const std::string tile = std::to_string(tileNum);
     switch (mode)
     {
         case NONE:
             str += "None";
             break;
         case WALL_TILE:
-            str += "Wall - " + std::to_string(tileNum);
+            str += "Wall - " + tile;
             break;
         case LEVEL_TILE:
-            str += "Level - " + std::to_string(tileNum);
+            str += "Level - " + tile;
+            break;
+        case DECORATION:
+            str += "Decor - " + tile + " | " + (collisionEnabled ? "Collidable" : "Not Collidable");
     }
 }
 
@@ -57,6 +65,10 @@ void EditorHelper::processInputs(const sf::Event& event) {
 
 
     if (event.type == sf::Event::KeyPressed) {
+        if (event.key.code == sf::Keyboard::C) {
+            collisionEnabled = !collisionEnabled;
+        }
+
         if (userEntering) {
             // Cancel input
             if (event.key.code == sf::Keyboard::Escape) {
@@ -79,6 +91,10 @@ void EditorHelper::processInputs(const sf::Event& event) {
             }
             if (event.key.code == sf::Keyboard::L) {
                 nextMode = LEVEL_TILE;
+            }
+
+            if (event.key.code == sf::Keyboard::D) {
+                nextMode = DECORATION;
             }
 
             if (event.key.code == sf::Keyboard::Backspace) {

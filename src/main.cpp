@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
                 return editorMain("assets/levels/default/");
             else
                 return editorMain(argv[2]);
-
         }
     
     return gameMain();

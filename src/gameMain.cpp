@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
+#include <fstream>
 #include <cmath>
 
 using std::cout;
@@ -9,7 +10,7 @@ class TileMap : public sf::Drawable, public sf::Transformable
 {
 public:
 
-    bool load(const std::string& tileset, sf::Vector2u tilesize2, const int* tilesData, unsigned int width, unsigned int height)
+    bool load(const std::string& tileset, sf::Vector2u tilesize2, int* tilesData, unsigned int width, unsigned int height)
     {
         tileSize = tilesize2;
         tilemapSize = sf::Vector2u(width, height);
@@ -134,81 +135,147 @@ sf::Sprite createPlayerBullet(sf::Sprite& player, sf::Texture& bulletTexture) {
     return bullet;
 }
 
+struct Decoration : public sf::Sprite {
+    bool collidable;
+    std::string texLocation;
+
+    bool collidesWith(sf::FloatRect bb) const {
+        return collidable && getGlobalBounds().intersects(bb);
+    }
+};
+
+struct Texture : public sf::Texture {
+    std::string location;
+};
+
+static bool deserialize(const std::string& file, int& width, int& height, int*& data) {
+    sf::Image img;
+    if (img.loadFromFile(file)) {
+        auto size = img.getSize();
+        width = size.x;
+        height = size.y;
+        data = new int[width * height]();
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                data[i + j * width] = img.getPixel(i, j).r;
+            }
+        }
+        return true;
+    }
+    else
+        return false;
+}
+
+static bool deserializeDecorations(const std::string& filePath, std::vector<Decoration>& array, std::vector<Texture>& textures) {
+    std::ifstream file(filePath);
+
+    std::string texLoc;
+    float posX, posY, rot;
+    bool collidable;
+
+    while (file >> texLoc >> posX >> posY >> rot >> collidable) {
+        Decoration current;
+        current.collidable = collidable;
+        current.texLocation = texLoc;
+        current.setPosition(posX, posY);
+        current.setRotation(rot);
+
+        bool found = false;
+        for (const auto& tex : textures) {
+            if (tex.location == texLoc) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            Texture tex;
+            if (!tex.loadFromFile(texLoc)) return false;
+            tex.location = texLoc;
+            textures.push_back(tex);
+        }
+        array.push_back(current);
+    }
+
+    for (auto& decor : array) {
+        for (const auto& tex : textures) {
+            if (tex.location == decor.texLocation) {
+                decor.setTexture(tex, true);
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+
+static bool decorCollides(const sf::FloatRect& bb, const std::vector<Decoration>& array) {
+    for (const auto& decor: array) {
+        if (decor.collidesWith(bb)) return true;
+    }
+    return false;
+}
+
 int gameMain()
 {
+    // Game Window
     sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
+    settings.antialiasingLevel = 0;
     sf::RenderWindow window(sf::VideoMode(1200, 640), "INJECTED!", sf::Style::Default, settings);
     window.setVerticalSyncEnabled(true);
     // window.setMouseCursorGrabbed(true);
 
-    sf::View view1(sf::Vector2f(32.f, 32.f), sf::Vector2f(300.f, 160.f));
+    sf::View view1(sf::Vector2f(-32.f, -32.f), sf::Vector2f(300.f, 160.f));
 
+    // Textures
     sf::Texture playerTexture;
     playerTexture.loadFromFile("assets/textures/player.png");
     playerTexture.setSmooth(false);
-
     sf::Texture bulletTexture;
     bulletTexture.loadFromFile("assets/textures/bullet_sprite.png");
     bulletTexture.setSmooth(false);
 
+    // Player Sprite
     sf::Sprite player(playerTexture);
     const sf::Vector2f offset(sf::Vector2f(player.getLocalBounds().width / 2, player.getLocalBounds().height / 2));
     player.setOrigin(offset);
-    player.setPosition(sf::Vector2f(32.f, 32.f));
+    player.setPosition(sf::Vector2f(-32.f, -32.f));
 
+    // Sounds
     sf::SoundBuffer ak47SoundBuffer;
     ak47SoundBuffer.loadFromFile("assets/sounds/ak47-1.wav");
     ak47Sound.setBuffer(ak47SoundBuffer);
 
-    sf::Clock clock;
-
-
-    // define the level with an array of tile indices
-    const int level[] =
-    {
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-        3, 9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 3,
-        3, 9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 3,
-        3, 9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 3,
-        3, 9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 3,
-        3, 9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 3,
-        3, 9, 9, 9, 9, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 3,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    };
-
-    const int levelwalls[] = {
-        1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1,
-        3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-        1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1,
+    // Loading Level Data
+    int levelWidth, levelHeight, wallWidth, wallHeight, *levelData, *wallsData;
     
-    };
-
-    // create the tilemap from the level definition
-    TileMap map;
-    if (!map.load("assets/textures/tileset.png", sf::Vector2u(16, 16), level, 16, 8))
+    if (!deserialize("assets/levels/default/level.png", levelWidth, levelHeight, levelData))
         return -1;
-    // map.move(32, 32);
+    
+    if (!deserialize("assets/levels/default/wall.png", wallWidth, wallHeight, wallsData))
+        return -1;
+
+    TileMap map;
+    if (!map.load("assets/textures/tileset.png", sf::Vector2u(16, 16), levelData, levelWidth, levelHeight))
+        return -1;
 
     TileMap walls;
-    if (!walls.load("assets/textures/wall_tileset.png", sf::Vector2u(8, 8), levelwalls, 32, 16)) 
+    if (!walls.load("assets/textures/wall_tileset.png", sf::Vector2u(8, 8), wallsData, wallWidth, wallHeight)) 
         return -1;
 
-    std::vector<sf::Sprite> bullets;
+    // Decorations
+    std::vector<Decoration> decorations;
+    std::vector<Texture> decorTextures;
 
+    if (!deserializeDecorations("assets/levels/default/decor.dat", decorations, decorTextures))
+        return -1;
+
+    // Other stuff
+    std::vector<sf::Sprite> bullets;
+    sf::Clock clock;
+
+    // Game Loop
     while (window.isOpen())
     {
         float delta = clock.restart().asSeconds();
@@ -292,7 +359,8 @@ int gameMain()
             view1.move(-speed, 0.f);
         }
         // If Player is in an invalid position, restore player and view to previous position
-        if (walls.collides(getPlayerBounds(player))) {
+        auto playerBB = getPlayerBounds(player);
+        if (walls.collides(playerBB) || decorCollides(playerBB, decorations)) {
             player.setPosition(oldPos);
             view1 = oldView;
         }
@@ -311,7 +379,8 @@ int gameMain()
             view1.move(0.f, speed);
         }
         // Do this separately for vertical and horizontal movement
-        if (walls.collides(getPlayerBounds(player))) {
+        playerBB = getPlayerBounds(player);
+        if (walls.collides(playerBB) || decorCollides(playerBB, decorations)) {
             player.setPosition(oldPos);
             view1 = oldView;
         }
@@ -329,14 +398,19 @@ int gameMain()
         window.draw(walls);
         // window.draw(boundingBox);
 
+        for (const auto& decor : decorations) {
+            window.draw(decor);
+        }
 
-        for (auto bullet : bullets)
+        for (const auto& bullet : bullets)
             window.draw(bullet);
 
         window.draw(player);
 
         window.display();
     }
+
+    delete wallsData, levelData;
 
     return 0;
 }
