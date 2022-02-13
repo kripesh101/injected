@@ -48,7 +48,7 @@ public:
                 quad[3].position = sf::Vector2f(i * tileSize.x, (j + 1) * tileSize.y);
 
                 // define its 4 texture coordinates
-                constexpr float offset = 0.25f;
+                constexpr float offset = 0.1f;
 
                 quad[0].texCoords = sf::Vector2f(tu * tileSize.x + offset, tv * tileSize.y + offset);
                 quad[1].texCoords = sf::Vector2f((tu + 1) * tileSize.x - offset, tv * tileSize.y + offset);
@@ -86,7 +86,7 @@ public:
         sf::Vertex* quad = &m_vertices[currentTile * 4];
 
         // update its 4 texture coordinates
-        constexpr float offset = 0.25f;
+        constexpr float offset = 0.1f;
 
         quad[0].texCoords = sf::Vector2f(tu * tileSize.x + offset, tv * tileSize.y + offset);
         quad[1].texCoords = sf::Vector2f((tu + 1) * tileSize.x - offset, tv * tileSize.y + offset);
@@ -293,7 +293,7 @@ int editorMain(const std::string& targetFolder) {
     decorPreview.setColor(sf::Color(255, 255, 255, 128));
 
     std::vector<Decoration> decorations;
-    deserializeDecorations(targetFolder + "decor.dat", decorations, decorTextures);
+    deserializeDecorations(targetFolder + "decor.txt", decorations, decorTextures);
 
     // Main Loop
     while (window.isOpen()) {
@@ -373,8 +373,14 @@ int editorMain(const std::string& targetFolder) {
                     } 
                     // LCtrl -> Rotate Decoration
                     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
-                        if (scrollDelta > 0) decorPreview.rotate(90);
-                        else decorPreview.rotate(-90);
+                        float angle = 90.f;
+                        // Finer rotation
+                        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+                            angle = std::abs(scrollDelta * 2.5f);
+                        }
+
+                        if (scrollDelta > 0) decorPreview.rotate(angle);
+                        else decorPreview.rotate(-angle);
                     }
                     // Else Zoom
                     else {
@@ -393,6 +399,10 @@ int editorMain(const std::string& targetFolder) {
                             decor.setColor(sf::Color(255, 255, 255, 192));
                     }
                 }
+
+                // Press R to reset decoration rotation
+                if (event.key.code == sf::Keyboard::R)
+                    decorPreview.setRotation(0);
             }
             if (event.type == sf::Event::KeyReleased) {
                 if (event.key.code == sf::Keyboard::Q) {
@@ -412,6 +422,12 @@ int editorMain(const std::string& targetFolder) {
                     level.changeTile(mousePos.x, mousePos.y, helper.getCurrentTileNumber());
                 else if (helper.getCurrentMode() == WALL_TILE)
                     walls.changeTile(mousePos.x, mousePos.y, helper.getCurrentTileNumber());
+            }
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+                if (helper.getCurrentMode() == LEVEL_TILE)
+                    level.changeTile(mousePos.x, mousePos.y, 0);
+                else if (helper.getCurrentMode() == WALL_TILE)
+                    walls.changeTile(mousePos.x, mousePos.y, 0);
             }
 
             // Movement code
@@ -479,7 +495,7 @@ int editorMain(const std::string& targetFolder) {
     serialize(targetFolder + "level.png", width, height, levelArray);
     serialize(targetFolder + "wall.png", width * 2, height * 2, wallsArray);
 
-    serializeDecorations(targetFolder + "decor.dat", decorations);
+    serializeDecorations(targetFolder + "decor.txt", decorations);
     
     delete levelArray, wallsArray;
 

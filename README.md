@@ -44,7 +44,7 @@ Command: `main.exe -editor assets/levels/test_level_1/`.\
 
 ## Editor Controls
 
-Moving around the view is done using the `WASD` keys. Hold `Shift` to speed up the movement. Use the scroll whell to adjust the zoom level.
+Moving around the view is done using the `WASD` keys. Hold `Shift` to speed up the movement. Use the scroll-wheel to adjust the zoom level.
 
 ### Editing Tiles
 
@@ -55,9 +55,12 @@ Press `W` to switch to Walls Tile Map.
 
 Then, enter the tile number of the texture you want to use. Finally, press `Enter` to confirm your changes. You can always press `Esc` to cancel any ongoing input.
 
-Now, you can click on the map to paint the tiles. To paint other tiles, you can use the input mode again. Alternatively, pressing `Alt` and scrolling with the mouse will allow you to cycle through the tile numbers.
+Now, you can `Left-click` on the map to paint the tiles. To paint other tiles, you can use the input mode again. Alternatively, pressing `Alt` and scrolling with the mouse will allow you to cycle through the tile numbers. To delete tiles, you have two options:
 
-You can also press middle-click on any existing tile to choose that specfic tile's number as the current tile number.
+1. Set tile number to 0 (corresponds to an empty tile) or,
+2. `Right-click` on existing tiles
+
+You can also middle-click on any existing tile to choose that specific tile's number as the current tile number.
 
 ### Decorations
 
@@ -65,14 +68,33 @@ Press `D` while in the input mode to switch to Decorations editing.
 
 Decorations are sprite objects on the level that can optionally have collision enabled on them. They can be placed anywhere on the map (even outside the tilemap boundaries).
 
-In the editor, they are shown as a preview. Press left click to place the decoration, and right click to delete a decoration.
+In the editor, they are shown as a preview. `Left-click` to place the decoration, and `Right-click` to delete a decoration.
 
-Press C to toggle collisions. You can hold Q at anytime to dim decorations that have collisions disabled.
+Press `C` to toggle collisions. You can hold `Q` at anytime to dim decorations that have collisions disabled.
 
 Holding `Alt` and scrolling the mouse wheel will cycle through all the available decorations.
 
-Similarly, Holding `Ctrl` and scrolling the mouse wheel will rotate the decoration.
+Similarly, Holding `Ctrl` and scrolling the mouse wheel will rotate the decoration.\
+Hold `Shift` while doing this to have much finer control over the rotation.\
+You can press `R` to reset the rotation if needed. 
+
+**There are a few things to be mindful of when doing fine rotations:**
+
+1. Bounding boxes in SFML are always *axis-aligned* (always a rectangle with sides parallel to the x and y axes). This means rotations like 45° will have very large bounding boxes and feel janky for the player to navigate around.
+
+2. Only 90° rotations will rotate the bounding boxes properly. Other rotations will grow the bounding box in weird ways.
+
+3. Keep rotations for collidable decorations at **multiples of 90°** (and around ± 5°) for the best player experience.
+
+4. Rotations have no additional impact on the rendering of decorations. Feel free do any rotations with non-collidable decorations!
 
 ## Saving Levels
 
 Closing the editor will automatically save the level.
+
+`level.png` stores Level Tile Map data. Tile number data is stored in red channel of the pixels.
+
+`walls.png` stores Walls Tile Map data. Tile number data is stored in red channel of the pixels.
+
+`decor.txt` stores Decorations Data. Format:\
+`<texture location> <x-coordinate> <y-coordinate> <rotation (in degrees)> <collision (0 or 1)>`

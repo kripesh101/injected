@@ -268,7 +268,7 @@ int gameMain()
     std::vector<Decoration> decorations;
     std::vector<Texture> decorTextures;
 
-    if (!deserializeDecorations("assets/levels/default/decor.dat", decorations, decorTextures))
+    if (!deserializeDecorations("assets/levels/default/decor.txt", decorations, decorTextures))
         return -1;
 
     // Other stuff
@@ -335,55 +335,86 @@ int gameMain()
             }
         }
 
-        sf::Vector2f oldPos = player.getPosition();
-        sf::View oldView = view1;
-
         // Movement code
+
+        sf::Vector2f oldPos = player.getPosition();
+        bool diagonal = false;
         float speed = 100.f * delta;
         // cout << speed << "\n";
         
         // If moving diagonally, nerf speed slightly
         if (((sf::Keyboard::isKeyPressed(sf::Keyboard::D)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::A))) 
-         && ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::S))))
+         && ((sf::Keyboard::isKeyPressed(sf::Keyboard::W)) || (sf::Keyboard::isKeyPressed(sf::Keyboard::S)))) {
             speed *= 0.75f;
+            diagonal = true;
+         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
             // right key is pressed: move our character
             player.move(speed, 0.f);
-            view1.move(speed, 0.f);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
         {
             player.move(-speed, 0.f);
-            view1.move(-speed, 0.f);
         }
         // If Player is in an invalid position, restore player and view to previous position
         auto playerBB = getPlayerBounds(player);
         if (walls.collides(playerBB) || decorCollides(playerBB, decorations)) {
-            player.setPosition(oldPos);
-            view1 = oldView;
+            if (diagonal) player.setPosition(oldPos);
+            else {
+                player.move(0.f, 10.f);
+                auto tempBB = getPlayerBounds(player);
+                if (!(walls.collides(tempBB) || decorCollides(tempBB, decorations))) {
+                    player.setPosition(oldPos);
+                    player.move(0.f, speed);
+                } else {
+                    player.move(0.f, -20.f);
+                    tempBB = getPlayerBounds(player);
+
+                    player.setPosition(oldPos);
+
+                    if (!(walls.collides(tempBB) || decorCollides(tempBB, decorations))) {
+                        player.move(0.f, -speed);
+                    }
+                }
+            }
         }
         
         oldPos = player.getPosition();
-        oldView = view1;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
         {
             player.move(0.f, -speed);
-            view1.move(0.f, -speed);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
             player.move(0.f, speed);
-            view1.move(0.f, speed);
         }
         // Do this separately for vertical and horizontal movement
         playerBB = getPlayerBounds(player);
         if (walls.collides(playerBB) || decorCollides(playerBB, decorations)) {
-            player.setPosition(oldPos);
-            view1 = oldView;
+            if (diagonal) player.setPosition(oldPos);
+            else {
+                player.move(10.f, 0.f);
+                auto tempBB = getPlayerBounds(player);
+                if (!(walls.collides(tempBB) || decorCollides(tempBB, decorations))) {
+                    player.setPosition(oldPos);
+                    player.move(speed, 0.f);
+                } else {
+                    player.move(-20.f, 0.f);
+                    tempBB = getPlayerBounds(player);
+
+                    player.setPosition(oldPos);
+
+                    if (!(walls.collides(tempBB) || decorCollides(tempBB, decorations))) {
+                        player.move(-speed, 0.f);
+                    }
+                }
+            }
         }
+
+        view1.setCenter(player.getPosition());
 
         window.setView(view1);
 
@@ -396,7 +427,11 @@ int gameMain()
          
         window.draw(map);
         window.draw(walls);
-        // window.draw(boundingBox);
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Period)) {
+            getPlayerBounds(player);
+            window.draw(boundingBox);
+        }
 
         for (const auto& decor : decorations) {
             window.draw(decor);
