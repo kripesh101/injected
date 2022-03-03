@@ -4,109 +4,10 @@
 #include <fstream>
 #include <cmath>
 
+#include <common/decoration.hpp>
+#include <common/tilemap.hpp>
+
 using std::cout;
-
-class TileMap : public sf::Drawable, public sf::Transformable
-{
-public:
-
-    bool load(const std::string& tileset, sf::Vector2u tilesize2, int* tilesData, unsigned int width, unsigned int height)
-    {
-        tileSize = tilesize2;
-        tilemapSize = sf::Vector2u(width, height);
-        tiles = tilesData;
-
-        // load the tileset texture
-        if (!m_tileset.loadFromFile(tileset))
-            return false;
-        m_tileset.setSmooth(false);
-
-        // resize the vertex array to fit the level size
-        m_vertices.setPrimitiveType(sf::Quads);
-        m_vertices.resize(width * height * 4);
-
-        // populate the vertex array, with one quad per tile
-        for (unsigned int i = 0; i < width; ++i)
-            for (unsigned int j = 0; j < height; ++j)
-            {
-                // get the current tile number
-                int tileNumber = tiles[i + j * width];
-
-                // find its position in the tileset texture
-                int tu = tileNumber % (m_tileset.getSize().x / tileSize.x);
-                int tv = tileNumber / (m_tileset.getSize().x / tileSize.x);
-
-                // get a pointer to the current tile's quad
-                sf::Vertex* quad = &m_vertices[(i + j * width) * 4];
-
-                // define its 4 corners
-                quad[0].position = sf::Vector2f(i * tileSize.x, j * tileSize.y);
-                quad[1].position = sf::Vector2f((i + 1) * tileSize.x, j * tileSize.y);
-                quad[2].position = sf::Vector2f((i + 1) * tileSize.x, (j + 1) * tileSize.y);
-                quad[3].position = sf::Vector2f(i * tileSize.x, (j + 1) * tileSize.y);
-
-                // define its 4 texture coordinates
-                quad[0].texCoords = sf::Vector2f(tu * tileSize.x + 0.1f, tv * tileSize.y + 0.1f);
-                quad[1].texCoords = sf::Vector2f((tu + 1) * tileSize.x - 0.1f, tv * tileSize.y + 0.1f);
-                quad[2].texCoords = sf::Vector2f((tu + 1) * tileSize.x - 0.1f, (tv + 1) * tileSize.y - 0.1f);
-                quad[3].texCoords = sf::Vector2f(tu * tileSize.x + 0.1f, (tv + 1) * tileSize.y - 0.1f);
-            }
-
-        return true;
-    }
-
-    bool collides(const sf::FloatRect& bb) {
-        // cout << "\n";
-        return pointCollides(bb.left, bb.top) || pointCollides(bb.left + 8, bb.top) 
-            || pointCollides(bb.left + bb.width, bb.top) || pointCollides(bb.left + bb.width, bb.top + 8) 
-            || pointCollides(bb.left + bb.width, bb.top + bb.height) || pointCollides(bb.left + 8, bb.top + bb.height)
-            || pointCollides(bb.left, bb.top + bb.height) || pointCollides(bb.left, bb.top + 8);
-    }
-
-private:
-
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
-    {
-        // apply the transform
-        states.transform *= getTransform();
-
-        // apply the tileset texture
-        states.texture = &m_tileset;
-
-        // draw the vertex array
-        target.draw(m_vertices, states);
-    }
-
-    bool pointCollides(const float& x, const float& y) const {
-        const sf::Vector2i tile = getTileCoordinates(x, y);
-        
-        // cout << tile.x << " " << tile.y << " | ";
-
-        // Tile coordinates outside of tilemap
-        if (tile.x < 0 || tile.y < 0 || tile.x >= tilemapSize.x || tile.y >= tilemapSize.y)
-            return false;
-
-        // If tile data is 0, no collision.
-        // Else collide.
-        if (tiles[tile.x + tile.y * tilemapSize.x] == 0) return false;
-        else return true;
-    }
-
-    sf::Vector2i getTileCoordinates(float x, float y) const {
-        // const sf::Vector2f& tilemapPos = getPosition();
-        // x -= tilemapPos.x;
-        // y -= tilemapPos.y;
-
-        return sf::Vector2i(floor(x / tileSize.x), floor(y / tileSize.y));
-    }
-
-    sf::VertexArray m_vertices;
-    sf::Texture m_tileset;
-    sf::Vector2u tileSize;
-    sf::Vector2u tilemapSize;
-
-    const int* tiles;
-};
 
 sf::RectangleShape boundingBox(sf::Vector2f(16.f, 16.f));
 
@@ -133,88 +34,6 @@ sf::Sprite createPlayerBullet(sf::Sprite& player, sf::Texture& bulletTexture) {
     bullet.setRotation(player.getRotation());
 
     return bullet;
-}
-
-struct Decoration : public sf::Sprite {
-    bool collidable;
-    std::string texLocation;
-
-    bool collidesWith(sf::FloatRect bb) const {
-        return collidable && getGlobalBounds().intersects(bb);
-    }
-};
-
-struct Texture : public sf::Texture {
-    std::string location;
-};
-
-static bool deserialize(const std::string& file, int& width, int& height, int*& data) {
-    sf::Image img;
-    if (img.loadFromFile(file)) {
-        auto size = img.getSize();
-        width = size.x;
-        height = size.y;
-        data = new int[width * height]();
-
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                data[i + j * width] = img.getPixel(i, j).r;
-            }
-        }
-        return true;
-    }
-    else
-        return false;
-}
-
-static bool deserializeDecorations(const std::string& filePath, std::vector<Decoration>& array, std::vector<Texture>& textures) {
-    std::ifstream file(filePath);
-
-    std::string texLoc;
-    float posX, posY, rot;
-    bool collidable;
-
-    while (file >> texLoc >> posX >> posY >> rot >> collidable) {
-        Decoration current;
-        current.collidable = collidable;
-        current.texLocation = texLoc;
-        current.setPosition(posX, posY);
-        current.setRotation(rot);
-
-        bool found = false;
-        for (const auto& tex : textures) {
-            if (tex.location == texLoc) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            Texture tex;
-            if (!tex.loadFromFile(texLoc)) return false;
-            tex.location = texLoc;
-            textures.push_back(tex);
-        }
-        array.push_back(current);
-    }
-
-    for (auto& decor : array) {
-        for (const auto& tex : textures) {
-            if (tex.location == decor.texLocation) {
-                decor.setTexture(tex, true);
-                break;
-            }
-        }
-    }
-
-    return true;
-}
-
-static bool decorCollides(const sf::FloatRect& bb, const std::vector<Decoration>& array) {
-    for (const auto& decor: array) {
-        if (decor.collidesWith(bb)) return true;
-    }
-    return false;
 }
 
 int gameMain()
@@ -250,10 +69,10 @@ int gameMain()
     // Loading Level Data
     int levelWidth, levelHeight, wallWidth, wallHeight, *levelData, *wallsData;
     
-    if (!deserialize("assets/levels/default/level.png", levelWidth, levelHeight, levelData))
+    if (!deserializeTileData("assets/levels/default/level.png", levelWidth, levelHeight, levelData))
         return -1;
     
-    if (!deserialize("assets/levels/default/wall.png", wallWidth, wallHeight, wallsData))
+    if (!deserializeTileData("assets/levels/default/wall.png", wallWidth, wallHeight, wallsData))
         return -1;
 
     TileMap map;
@@ -266,7 +85,7 @@ int gameMain()
 
     // Decorations
     std::vector<Decoration> decorations;
-    std::vector<Texture> decorTextures;
+    std::vector<FileTexture> decorTextures;
 
     if (!deserializeDecorations("assets/levels/default/decor.txt", decorations, decorTextures))
         return -1;
