@@ -4,238 +4,11 @@
 #include <SFML/Graphics.hpp>
 #include <filesystem.hpp>
 #include "helper.hpp"
+#include <common/tilemap.hpp>
+#include <common/decoration.hpp>
 
 using std::cout;
 namespace fs = ghc::filesystem;
-
-class TileMap : public sf::Drawable, public sf::Transformable
-{
-public:
-
-    bool load(const std::string& tileset, sf::Vector2u tilesize2, int* tilesData, unsigned int width, unsigned int height)
-    {
-        tileSize = tilesize2;
-        tilemapSize = sf::Vector2u(width, height);
-        tiles = tilesData;
-
-        // load the tileset texture
-        if (!m_tileset.loadFromFile(tileset))
-            return false;
-        m_tileset.setSmooth(false);
-
-        // resize the vertex array to fit the level size
-        m_vertices.setPrimitiveType(sf::Quads);
-        m_vertices.resize(width * height * 4);
-
-        // populate the vertex array, with one quad per tile
-        for (unsigned int i = 0; i < width; ++i)
-            for (unsigned int j = 0; j < height; ++j)
-            {
-                // get the current tile number
-                int tileNumber = tiles[i + j * width];
-
-                // find its position in the tileset texture
-                int tu = tileNumber % (m_tileset.getSize().x / tileSize.x);
-                int tv = tileNumber / (m_tileset.getSize().x / tileSize.x);
-
-                // get a pointer to the current tile's quad
-                sf::Vertex* quad = &m_vertices[(i + j * width) * 4];
-
-                // define its 4 corners
-                quad[0].position = sf::Vector2f(i * tileSize.x, j * tileSize.y);
-                quad[1].position = sf::Vector2f((i + 1) * tileSize.x, j * tileSize.y);
-                quad[2].position = sf::Vector2f((i + 1) * tileSize.x, (j + 1) * tileSize.y);
-                quad[3].position = sf::Vector2f(i * tileSize.x, (j + 1) * tileSize.y);
-
-                // define its 4 texture coordinates
-                constexpr float offset = 0.1f;
-
-                quad[0].texCoords = sf::Vector2f(tu * tileSize.x + offset, tv * tileSize.y + offset);
-                quad[1].texCoords = sf::Vector2f((tu + 1) * tileSize.x - offset, tv * tileSize.y + offset);
-                quad[2].texCoords = sf::Vector2f((tu + 1) * tileSize.x - offset, (tv + 1) * tileSize.y - offset);
-                quad[3].texCoords = sf::Vector2f(tu * tileSize.x + offset, (tv + 1) * tileSize.y - offset);
-            }
-
-        return true;
-    }
-
-    int getTile(const float& x, const float& y) {
-        const sf::Vector2i tile = getTileCoordinates(x, y);
-        
-        // Tile coordinates outside of tilemap
-        if (tile.x < 0 || tile.y < 0 || tile.x >= tilemapSize.x || tile.y >= tilemapSize.y)
-            return 0;
-
-        const int currentTile = tile.x + tile.y * tilemapSize.x;
-        return tiles[currentTile];
-    }
-
-    void changeTile(const float& x, const float& y, const int& tileNumber) {
-        const sf::Vector2i tile = getTileCoordinates(x, y);
-        
-        // Tile coordinates outside of tilemap
-        if (tile.x < 0 || tile.y < 0 || tile.x >= tilemapSize.x || tile.y >= tilemapSize.y)
-            return;
-
-        const int currentTile = tile.x + tile.y * tilemapSize.x;
-        tiles[currentTile] = tileNumber;
-
-        int tu = tileNumber % (m_tileset.getSize().x / tileSize.x);
-        int tv = tileNumber / (m_tileset.getSize().x / tileSize.x);
-
-        sf::Vertex* quad = &m_vertices[currentTile * 4];
-
-        // update its 4 texture coordinates
-        constexpr float offset = 0.1f;
-
-        quad[0].texCoords = sf::Vector2f(tu * tileSize.x + offset, tv * tileSize.y + offset);
-        quad[1].texCoords = sf::Vector2f((tu + 1) * tileSize.x - offset, tv * tileSize.y + offset);
-        quad[2].texCoords = sf::Vector2f((tu + 1) * tileSize.x - offset, (tv + 1) * tileSize.y - offset);
-        quad[3].texCoords = sf::Vector2f(tu * tileSize.x + offset, (tv + 1) * tileSize.y - offset);
-    }
-
-    bool pointLiesWithin(sf::Vector2f point) {
-        const sf::Vector2i tile = getTileCoordinates(point.x, point.y);
-
-        if (tile.x < 0 || tile.y < 0 || tile.x >= tilemapSize.x || tile.y >= tilemapSize.y)
-            return false;
-        return true;
-    }
-private:
-
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
-    {
-        // apply the transform
-        states.transform *= getTransform();
-
-        // apply the tileset texture
-        states.texture = &m_tileset;
-
-        // draw the vertex array
-        target.draw(m_vertices, states);
-    }
-
-    bool pointCollides(const float& x, const float& y) const {
-        const sf::Vector2i tile = getTileCoordinates(x, y);
-        
-        // cout << tile.x << " " << tile.y << " | ";
-
-        // Tile coordinates outside of tilemap
-        if (tile.x < 0 || tile.y < 0 || tile.x >= tilemapSize.x || tile.y >= tilemapSize.y)
-            return false;
-
-        // If tile data is 0, no collision.
-        // Else collide.
-        if (tiles[tile.x + tile.y * tilemapSize.x] == 0) return false;
-        else return true;
-    }
-
-    sf::Vector2i getTileCoordinates(float x, float y) const {
-        // const sf::Vector2f& tilemapPos = getPosition();
-        // x -= tilemapPos.x;
-        // y -= tilemapPos.y;
-
-        return sf::Vector2i(floor(x / tileSize.x), floor(y / tileSize.y));
-    }
-
-    sf::VertexArray m_vertices;
-    sf::Texture m_tileset;
-    sf::Vector2u tileSize;
-    sf::Vector2u tilemapSize;
-
-    int* tiles;
-};
-
-static bool serialize(const std::string& file, int width, int height, int* data) {
-    sf::Image img;
-    img.create(width, height);
-    for (int i = 0; i < width; i++) {
-        for (int j = 0; j < height; j++) {
-            img.setPixel(i, j, sf::Color(data[i + j * width], 0, 0));
-        }
-    }
-    img.saveToFile(file);
-}
-
-static bool deserialize(const std::string& file, int& width, int& height, const int& defaultSize, int*& data) {
-    sf::Image img;
-    if (img.loadFromFile(file)) {
-        auto size = img.getSize();
-        width = size.x;
-        height = size.y;
-        data = new int[width * height]();
-
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                data[i + j * width] = img.getPixel(i, j).r;
-            }
-        }
-        return true;
-    }
-    else {
-        width = defaultSize;
-        height = defaultSize;
-        data = new int[width * height]();
-        return false;
-    } 
-}
-
-struct Texture : public sf::Texture {
-    std::string location;
-};
-
-struct Decoration : public sf::Sprite {
-    bool collidable = false;
-    std::string texLocation;
-};
-
-static void serializeDecorations(const std::string& filePath, std::vector<Decoration>& array) {
-    std::ofstream file(filePath);
-
-    for (const auto& decor : array) {
-        file << decor.texLocation << " "
-        << decor.getPosition().x << " "
-        << decor.getPosition().y << " "
-        << decor.getRotation() << " "
-        << decor.collidable << "\n";
-    }
-
-    file.close();
-}
-
-static void deserializeDecorations(const std::string& filePath, std::vector<Decoration>& array, const std::vector<Texture>& textures) {
-    if (!fs::exists(filePath)) return;
-
-    std::ifstream file(filePath);
-
-    std::string texLoc;
-    float posX, posY, rot;
-    bool collidable;
-
-    while (file >> texLoc >> posX >> posY >> rot >> collidable) {
-        Decoration current;
-        current.texLocation = texLoc;
-        current.collidable = collidable;
-
-        current.setPosition(posX, posY);
-        current.setRotation(rot);
-
-        bool found = false;
-        for (const auto& tex : textures) {
-            if (tex.location == current.texLocation) {
-                current.setTexture(tex, true);
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            cout << "Invalid texture referenced by decoration. Texture file path: " << current.texLocation << "\n";
-        } else {
-            array.push_back(current);
-        }
-    }
-}
 
 int editorMain(const std::string& targetFolder) {
     // Create window
@@ -247,12 +20,16 @@ int editorMain(const std::string& targetFolder) {
     // TileMap Data allocations
     int *levelArray;
     int *wallsArray;
-    int width, height;
+    int width = 150, height = 150;
 
     // Load TileMap data
+    // Create Level folder if it does not exist
     fs::create_directories(targetFolder);
-    deserialize(targetFolder + "wall.png", width, height, 300, wallsArray);
-    deserialize(targetFolder + "level.png", width, height, 150, levelArray);
+
+    if (!deserializeTileData(targetFolder + "wall.png", width, height, wallsArray))
+        wallsArray = new int[300 * 300]();
+    if (!deserializeTileData(targetFolder + "level.png", width, height, levelArray))
+        levelArray = new int[150 * 150]();
 
     // TileMap objects
     TileMap level;
@@ -281,9 +58,9 @@ int editorMain(const std::string& targetFolder) {
     outline.setOutlineColor(sf::Color(3, 252, 240));
 
     // Decorations
-    std::vector<Texture> decorTextures;
+    std::vector<FileTexture> decorTextures;
     for (const auto & entry : fs::directory_iterator("assets/textures/decorations")) {
-        Texture current;
+        FileTexture current;
         current.location = entry.path().string();
         current.loadFromFile(current.location);
         decorTextures.push_back(current);
@@ -322,7 +99,7 @@ int editorMain(const std::string& targetFolder) {
 
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     if (helper.getCurrentMode() == DECORATION) {
-                        Texture& currentTex = decorTextures[helper.getCurrentTileNumber()];
+                        FileTexture& currentTex = decorTextures[helper.getCurrentTileNumber()];
 
                         Decoration decor;
                         decor.setTexture(currentTex, true);
@@ -492,8 +269,8 @@ int editorMain(const std::string& targetFolder) {
     }
 
 
-    serialize(targetFolder + "level.png", width, height, levelArray);
-    serialize(targetFolder + "wall.png", width * 2, height * 2, wallsArray);
+    serializeTileData(targetFolder + "level.png", width, height, levelArray);
+    serializeTileData(targetFolder + "wall.png", width * 2, height * 2, wallsArray);
 
     serializeDecorations(targetFolder + "decor.txt", decorations);
     
