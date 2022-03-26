@@ -5,8 +5,12 @@
 #include <filesystem.hpp>
 namespace fs = ghc::filesystem;
 
-bool Decoration::collidesWith(sf::FloatRect bb) const {
+bool Decoration::collidesWith(const sf::FloatRect& bb) const {
     return collidable && getGlobalBounds().intersects(bb);
+}
+
+bool Decoration::collidesWith(const sf::Vector2f& point) const {
+    return collidable && getGlobalBounds().contains(point);
 }
 
 bool deserializeDecorations(const std::string& filePath, std::vector<Decoration>& decorations, std::vector<FileTexture>& textures) {
@@ -59,7 +63,7 @@ bool deserializeDecorations(const std::string& filePath, std::vector<Decoration>
     return true;
 }
 
-void serializeDecorations(const std::string& filePath, std::vector<Decoration>& decorations) {
+void serializeDecorations(const std::string& filePath, const std::vector<Decoration>& decorations) {
     std::ofstream file(filePath);
 
     for (const auto& decor : decorations) {
@@ -76,6 +80,13 @@ void serializeDecorations(const std::string& filePath, std::vector<Decoration>& 
 bool decorCollides(const sf::FloatRect& bb, const std::vector<Decoration>& array) {
     for (const auto& decor: array) {
         if (decor.collidesWith(bb)) return true;
+    }
+    return false;
+}
+
+bool decorCollides(const sf::Vector2f& point, const std::vector<Decoration>& array) {
+    for (const auto& decor: array) {
+        if (decor.collidesWith(point)) return true;
     }
     return false;
 }

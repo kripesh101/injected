@@ -1,13 +1,11 @@
-#include <iostream>
-#include <fstream>
 #include <cmath>
 #include <SFML/Graphics.hpp>
 #include <filesystem.hpp>
 #include "helper.hpp"
-#include <common/tilemap.hpp>
-#include <common/decoration.hpp>
 
-using std::cout;
+#include <common/level.hpp>
+#include <common/utils.hpp>
+
 namespace fs = ghc::filesystem;
 
 int editorMain(const std::string& targetFolder) {
@@ -17,31 +15,11 @@ int editorMain(const std::string& targetFolder) {
     sf::RenderWindow window(sf::VideoMode(1200, 640), "INJECTED! - MAP EDITOR", sf::Style::Default, settings);
     window.setVerticalSyncEnabled(true);
 
-    // TileMap Data allocations
-    int *levelArray;
-    int *wallsArray;
-    int width = 150, height = 150;
-
-    // Load TileMap data
-    // Create Level folder if it does not exist
-    fs::create_directories(targetFolder);
-
-    if (!deserializeTileData(targetFolder + "wall.png", width, height, wallsArray))
-        wallsArray = new int[300 * 300]();
-    if (!deserializeTileData(targetFolder + "level.png", width, height, levelArray))
-        levelArray = new int[150 * 150]();
-
-    // TileMap objects
-    TileMap level;
-    TileMap walls;
-    level.load("assets/textures/tileset.png", sf::Vector2u(16, 16), levelArray, width, height);
-    walls.load("assets/textures/wall_tileset.png", sf::Vector2u(8, 8), wallsArray, width * 2, height * 2);
-
     sf::View view(sf::Vector2f(140.f, 70.f), sf::Vector2f(300.f, 160.f));
     sf::Clock clock;
     EditorHelper helper;
     
-    // Font
+    // Font for Editor Status Text
     sf::Font font;
     font.loadFromFile("assets/fonts/editor_text.ttf");
     const_cast<sf::Texture&>(font.getTexture(16)).setSmooth(false);
@@ -51,14 +29,15 @@ int editorMain(const std::string& targetFolder) {
     statusText.setFillColor(sf::Color::White);
     statusText.move(10.f, 10.f);
 
-    // TileMap outline
-    sf::RectangleShape outline(sf::Vector2f(width * 16, height * 16));
-    outline.setFillColor(sf::Color(0));
-    outline.setOutlineThickness(5.f);
-    outline.setOutlineColor(sf::Color(3, 252, 240));
+    // Level object
+    Level lvl;
 
-    // Decorations
-    std::vector<FileTexture> decorTextures;
+    // References to simplify code slightly
+    TileMap &level = lvl.level;
+    TileMap &walls = lvl.walls;
+
+    // Preload decoration textures
+    std::vector<FileTexture> &decorTextures = lvl.decorTextures;
     for (const auto & entry : fs::directory_iterator("assets/textures/decorations")) {
         FileTexture current;
         current.location = entry.path().string();
@@ -66,11 +45,20 @@ int editorMain(const std::string& targetFolder) {
         decorTextures.push_back(current);
     }
 
+    // Load Level Data - Tiles and Decorations
+    lvl.loadFromFolder(targetFolder, true);
+
+    // TileMap outline
+    const sf::Vector2u &size = level.getTileMapSize();
+    sf::RectangleShape outline(sf::Vector2f(size.x * 16, size.y * 16));
+    outline.setFillColor(sf::Color(0));
+    outline.setOutlineThickness(5.f);
+    outline.setOutlineColor(sf::Color(3, 252, 240));
+
     sf::Sprite decorPreview;
     decorPreview.setColor(sf::Color(255, 255, 255, 128));
 
-    std::vector<Decoration> decorations;
-    deserializeDecorations(targetFolder + "decor.txt", decorations, decorTextures);
+    std::vector<Decoration>& decorations = lvl.decors;
 
     // Main Loop
     while (window.isOpen()) {
@@ -116,7 +104,6 @@ int editorMain(const std::string& targetFolder) {
                         for (auto it = decorations.begin(); it != decorations.end(); ++it) {
                             if (it->getGlobalBounds().contains(mousePos)) {
                                 decorations.erase(it);
-                                it--;
                                 break;
                             }
                         }
@@ -226,21 +213,13 @@ int editorMain(const std::string& targetFolder) {
         }
 
         // Changing background color
-        static float kekw = 0.0f;
-        kekw += delta * 0.3f;
-        const float r = std::abs(sin(kekw)) * 64;
-        const float b = std::abs(cos(kekw + 1)) * 96;
-        window.clear(sf::Color(32 + r, 0, 32 + b, 0));
+        window.clear(smoothColor(delta));
 
         // Draw TileMap and outline
         window.setView(view);
         window.draw(outline);
-        window.draw(level);
-        window.draw(walls);
-
-        // Decorations
-        for (const auto& decor : decorations)
-            window.draw(decor);
+        
+        window.draw(lvl);
 
         // Decoration Preview
         if (helper.getCurrentMode() == DECORATION) {          
@@ -268,13 +247,7 @@ int editorMain(const std::string& targetFolder) {
         window.display();
     }
 
-
-    serializeTileData(targetFolder + "level.png", width, height, levelArray);
-    serializeTileData(targetFolder + "wall.png", width * 2, height * 2, wallsArray);
-
-    serializeDecorations(targetFolder + "decor.txt", decorations);
-    
-    delete levelArray, wallsArray;
+    lvl.saveToFolder(targetFolder);
 
     return 0;
 }

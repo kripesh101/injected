@@ -47,12 +47,16 @@ bool TileMap::load(const std::string& tileset, sf::Vector2u tilesize2, int* tile
     return true;
 }
 
-bool TileMap::collides(const sf::FloatRect& bb) {
+bool TileMap::collides(const sf::FloatRect& bb) const {
     // cout << "\n";
     return pointCollides(bb.left, bb.top) || pointCollides(bb.left + bb.width / 2, bb.top) 
         || pointCollides(bb.left + bb.width, bb.top) || pointCollides(bb.left + bb.width, bb.top + bb.height / 2) 
         || pointCollides(bb.left + bb.width, bb.top + bb.height) || pointCollides(bb.left + bb.width / 2, bb.top + bb.height)
         || pointCollides(bb.left, bb.top + bb.height) || pointCollides(bb.left, bb.top + bb.height / 2);
+}
+
+bool TileMap::collides(const sf::Vector2f& point) const {
+    return pointCollides(point.x, point.y);
 }
 
 int TileMap::getTile(const float& x, const float& y) {
@@ -133,6 +137,14 @@ sf::Vector2i TileMap::getTileCoordinates(float x, float y) const {
     return sf::Vector2i(floor(x / tileSize.x), floor(y / tileSize.y));
 }
 
+const sf::Vector2u& TileMap::getTileMapSize() const {
+    return tilemapSize;
+}
+
+int* TileMap::getTilesData() const {
+    return tiles;
+}
+
 bool deserializeTileData(const std::string& file, int& width, int& height, int*& data) {
     sf::Image img;
     if (img.loadFromFile(file)) {
@@ -152,7 +164,7 @@ bool deserializeTileData(const std::string& file, int& width, int& height, int*&
         return false;
 }
 
-bool serializeTileData(const std::string& file, const int& width, const int& height, const int* data) {
+void serializeTileData(const std::string& file, const int& width, const int& height, const int* data) {
     sf::Image img;
     img.create(width, height);
     for (int i = 0; i < width; i++) {
