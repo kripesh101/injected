@@ -8,10 +8,18 @@ class TileMap : public sf::Drawable, public sf::Transformable
 public:
 
     bool load(const std::string& tileset, sf::Vector2u tilesize2, int* tilesData, unsigned int width, unsigned int height);
-    bool collides(const sf::FloatRect& bb);
+    
+    bool collides(const sf::FloatRect& bb) const;
+    bool collides(const sf::Vector2f& point) const;
+    
     void changeTile(const float& x, const float& y, const int& tileNumber);
     int getTile(const float& x, const float& y);
     bool pointLiesWithin(sf::Vector2f point);
+
+    const sf::Vector2u& getTileMapSize() const;
+    int* getTilesData() const;
+
+    ~TileMap() { delete tiles; }
 
 private:
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -27,4 +35,4 @@ private:
 };
 
 bool deserializeTileData(const std::string& file, int& width, int& height, int*& data);
-bool serializeTileData(const std::string& file, const int& width, const int& height, const int* data);
+void serializeTileData(const std::string& file, const int& width, const int& height, const int* data);

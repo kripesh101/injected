@@ -33,7 +33,7 @@ You can also open this project in Visual Studio Code, and Press `Ctrl+Shift+B` t
 To launch the INJECTED! Level Editor, open the compiled `main.exe` by passing `-editor` argument.\
 Command: `main.exe -editor`
 
-Default Level Directory: `assets/levels/default/`
+Default Level Directory: `assets/editor_default_level/`
 
 ## Custom Level Folder
 
