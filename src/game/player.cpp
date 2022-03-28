@@ -18,12 +18,7 @@ void Player::setPosition(const sf::Vector2f& pos) {
     view.setCenter(pos);
 }
 
-void Player::processInput(const sf::Vector2f& mousePos, const Level& level, const float& delta) {
-    // Face mouse cursor
-    sf::Vector2f cursorWRTPlayer = mousePos - getPosition();
-    const float angle = std::atan2(cursorWRTPlayer.y, cursorWRTPlayer.x) * 180. / 3.1415;
-    setRotation(angle);
-
+void Player::processInput(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const Level& level, const float& delta) {
     // Movement
     float moved = 100.f * delta;
 
@@ -105,10 +100,19 @@ void Player::processInput(const sf::Vector2f& mousePos, const Level& level, cons
         }
     }
 
-    view.setCenter(getPosition());
-
+    // Update Bounding Box
     const sf::Vector2f topLeft = getPosition() - sf::Vector2f(8.f, 8.f);
     boundingBox.setPosition(topLeft);
+
+    // Update Window View
+    view.setCenter(getPosition());
+    window.setView(view);
+
+    // Face mouse cursor
+    const sf::Vector2f& mousePos = window.mapPixelToCoords(mousePixelPos);
+    sf::Vector2f cursorWRTPlayer = mousePos - getPosition();
+    const float angle = std::atan2(cursorWRTPlayer.y, cursorWRTPlayer.x) * 180. / 3.1415;
+    setRotation(angle);
 }
 
 sf::FloatRect Player::getGlobalBounds() const {

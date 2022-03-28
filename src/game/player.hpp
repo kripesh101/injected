@@ -15,7 +15,7 @@ private:
 public:
     Player();
 
-    void processInput(const sf::Vector2f& mousePos, const Level& level, const float& delta);
+    void processInput(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const Level& level, const float& delta);
     void setPosition(const sf::Vector2f& pos);
     sf::FloatRect getGlobalBounds() const;
     const sf::RectangleShape& getBoundingBox() const;
