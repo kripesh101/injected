@@ -22,9 +22,9 @@ bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) 
 }
 
 bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const float& deltaTime) {    
-    window.setView(player.getView());
-
     if (window.hasFocus() && !paused) {
+        player.processInput(window, mousePixelPos, level, deltaTime);
+        
         constexpr float fireRate = 600.f; // bullets fired per minute
         constexpr float timeBetweenShots = 60.f / fireRate;
 
@@ -32,27 +32,6 @@ bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixel
         timeSinceLastShot += deltaTime;
 
         float bulletSpeed = 500.f * deltaTime;
-
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            if (timeSinceLastShot >= timeBetweenShots) {
-                timeSinceLastShot = 0.f;
-
-                gunSound.play();
-                sf::Sprite bullet(bulletTexture);
-                bullet.setOrigin(bullet.getLocalBounds().width / 2, bullet.getLocalBounds().height / 2);
-                bullet.setPosition(player.getPosition());
-                bullet.setRotation(player.getRotation());
-
-                const float rotation = bullet.getRotation() * 3.1415f / 180.f;
-                sf::Vector2f movement(cos(rotation), sin(rotation));
-                bullet.move(movement * 16.f);
-
-                if (!level.collides(bullet.getGlobalBounds(), true)) {
-                    bullet.move(movement * 8.f);
-                    bullets.push_back(bullet);
-                }
-            }
-        }
 
         for (auto it = bullets.begin(); it != bullets.end(); ++it) {
             const float rotation = it->getRotation();
@@ -70,8 +49,30 @@ bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixel
             }
         }
 
-        const sf::Vector2f mousePos = window.mapPixelToCoords(mousePixelPos);
-        player.processInput(mousePos, level, deltaTime);
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            if (timeSinceLastShot >= timeBetweenShots) {
+                timeSinceLastShot = 0.f;
+
+                gunSound.play();
+                sf::Sprite bullet(bulletTexture);
+                bullet.setOrigin(bullet.getLocalBounds().width / 2, bullet.getLocalBounds().height / 2);
+                bullet.setPosition(player.getPosition());
+                bullet.setRotation(player.getRotation());
+
+                const float rotation = bullet.getRotation() * 3.1415f / 180.f;
+                sf::Vector2f movement(cos(rotation), sin(rotation));
+                bullet.move(movement * 20.f);
+
+                if (!level.collides(bullet.getGlobalBounds(), true)) {
+                    bullet.move(movement * 8.f);
+                    bullets.push_back(bullet);
+                }
+            }
+        }
+    } else {
+        // Reset view to player view if game paused
+        // Menu rendering will change the view, so we must reset this
+        window.setView(player.getView());
     }
         
     window.draw(level);
