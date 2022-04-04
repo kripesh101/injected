@@ -7,9 +7,9 @@ bool PauseMenu::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelP
 
     if (window.hasFocus()) {
         const sf::Vector2f mousePos = window.mapPixelToCoords(mousePixelPos);
-        resume.processInput(mousePos);
-        mainMenu.processInput(mousePos);
-        quit.processInput(mousePos);
+        resume.processInput(window, mousePos);
+        mainMenu.processInput(window, mousePos);
+        quit.processInput(window, mousePos);
     }
 
 
@@ -46,7 +46,7 @@ const PauseMenuEvent& PauseMenu::getResponse() const {
 
 PauseMenu::PauseMenu() :
     view(sf::Vector2f(1920.f / 2, 1080.f / 2), sf::Vector2f(1920.f , 1080.f)),
-    menuOverlay(sf::Vector2f(600.f, 600.f)),
+    menuOverlay(sf::Vector2f(600.f, 600.f), 20.f, 10),
     
     // Buttons
     resume  (menuFont, "RESUME",    740.f, 500.f, 48),
@@ -54,14 +54,14 @@ PauseMenu::PauseMenu() :
     quit    (menuFont, "QUIT",      740.f, 740.f, 48)
 {
     menuOverlay.setPosition(660.f, 240.f);
-    menuOverlay.setFillColor(sf::Color(0, 0, 0, 192));
+    menuOverlay.setFillColor(sf::Color::Black);
 
     menuFont.loadFromFile("assets/fonts/main_menu.ttf");
     
     logoTexture.loadFromFile("assets/textures/logo.png");
     logoSprite.setTexture(logoTexture, true);
-    logoSprite.setScale(0.48f, 0.48f);
-    logoSprite.setPosition(680.f, 280.f);
+    logoSprite.setScale(0.40f, 0.40f);
+    logoSprite.setPosition(730.f, 280.f);
 }
 
 void PauseMenu::onLoad(sf::RenderWindow& window) {

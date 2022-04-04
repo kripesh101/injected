@@ -5,7 +5,8 @@ enum EditorMode {
     NONE,
     LEVEL_TILE,
     WALL_TILE,
-    DECORATION
+    DECORATION,
+    PLAYER_SPAWN
 };
 
 class EditorHelper {
