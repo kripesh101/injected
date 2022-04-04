@@ -58,6 +58,12 @@ int editorMain(const std::string& targetFolder) {
     sf::Sprite decorPreview;
     decorPreview.setColor(sf::Color(255, 255, 255, 128));
 
+    sf::Texture playerTex;
+    playerTex.loadFromFile("assets/textures/editor/player_preview.png");
+    sf::Sprite playerSpawn(playerTex);
+    playerSpawn.setOrigin(8.f, 8.f);
+    playerSpawn.setPosition(lvl.getPlayerSpawnPos());
+
     std::vector<Decoration>& decorations = lvl.decors;
 
     // Main Loop
@@ -96,6 +102,11 @@ int editorMain(const std::string& targetFolder) {
                         decor.collidable = helper.isCollisionEnabled();
                         decor.texLocation = currentTex.location;
                         decorations.push_back(decor);
+                    }
+                    else if (helper.getCurrentMode() == PLAYER_SPAWN) {
+                        auto viewPixelPos = sf::Vector2f(sf::Vector2i(mousePos));
+                        lvl.playerSpawnPos = viewPixelPos;
+                        playerSpawn.setPosition(viewPixelPos);
                     }
                 }
 
@@ -220,6 +231,7 @@ int editorMain(const std::string& targetFolder) {
         window.draw(outline);
         
         window.draw(lvl);
+        window.draw(playerSpawn);
 
         // Decoration Preview
         if (helper.getCurrentMode() == DECORATION) {          

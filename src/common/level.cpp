@@ -30,6 +30,12 @@ bool Level::loadFromFolder(const std::string& folderPath, const bool fallback) {
 
     levelBounds = sf::FloatRect(-64, -64, tilesWidth * 8 + 128, tilesHeight * 8 + 128);
 
+    if (ghc::filesystem::exists(folderPath + "player_spawn.txt")) {
+        std::ifstream playerSpawn(folderPath + "player_spawn.txt");
+        playerSpawn >> playerSpawnPos.x >> playerSpawnPos.y;
+        playerSpawn.close();
+    }
+
     return true;
 }
 
@@ -41,6 +47,10 @@ void Level::saveToFolder(const std::string& folderPath) const {
     serializeTileData(folderPath + "wall.png", sizeWalls.x, sizeWalls.y, walls.getTilesData());
 
     serializeDecorations(folderPath + "decor.txt", decors);
+
+    std::ofstream spawnFile(folderPath + "player_spawn.txt");
+    spawnFile << playerSpawnPos.x << " " << playerSpawnPos.y;
+    spawnFile.close();
 }
 
 void Level::draw(sf::RenderTarget& target, sf::RenderStates states) const {

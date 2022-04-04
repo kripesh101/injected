@@ -88,6 +88,22 @@ You can press `R` to reset the rotation if needed.
 
 4. Rotations have no additional impact on the rendering of decorations. Feel free do any rotations with non-collidable decorations!
 
+### Player Spawn Position
+
+The player spawn position is represented by a special texture in the editor:
+
+![Player Spawn Pos Indicator](bin/assets/textures/editor/player_preview.png)
+
+Press `P` while in input mode to switch to Player Spawn editing. Simply press `Left-click` to move the player spawn.
+
+By default, the player spawn is located outside the tilemap boundaries, at `-32, -32`.
+
+The player bounding box is always `16 x 16`, which is also the size of the special texture (see above). Use the red boundaries of the texture to help perfectly align your player spawn, if desired.
+
+**Important:**
+- The game automatically generates a boundary for all levels **64** pixels outside the tilemap boundary. The player spawn must be within this boundary or the player will be unable to move.
+- No collision checks are done by the editor for invalid positions. Make sure to playtest your map after changing the spawn position!
+
 ## Saving Levels
 
 Closing the editor will automatically save the level.

@@ -8,7 +8,7 @@
 
 #include "menu/mainMenu.hpp"
 #include "menu/pauseMenu.hpp"
-#include "simulation.hpp"
+#include "progression.hpp"
 
 enum State {
     MAIN_MENU,
@@ -26,11 +26,13 @@ int gameMain()
     window.setVerticalSyncEnabled(true);
     // window.setMouseCursorGrabbed(true);
 
+    Button::loadCursor(window);
+
     MainMenu mainMenu;
     PauseMenu pauseMenu;
-    mainMenu.onLoad(window);
+    Progression *mission = new Progression();
 
-    Simulation sim;
+    mainMenu.onLoad(window);
 
     sf::Clock clock;
 
@@ -50,13 +52,15 @@ int gameMain()
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) {
                     if (currentState == IN_GAME) {
-                        currentState = PAUSED;
-                        sim.setPaused(true);
-                        pauseMenu.onLoad(window);
+                        if (mission->setPaused(true)) {
+                            currentState = PAUSED;
+                            pauseMenu.onLoad(window);
+                        }
                     }
                     else if (currentState == PAUSED) {
                         currentState = IN_GAME;
-                        sim.setPaused(false);
+                        Button::resetCursor(window);
+                        mission->setPaused(false);
                         window.setTitle("INJECTED!");
                     }
                 }
@@ -69,20 +73,24 @@ int gameMain()
             if (mainMenu.update(window, mousePixelPos, delta)) {
                 auto response = mainMenu.getResponse();
                 switch (response.type) {
-                case response.QUIT:
-                    window.close();
-                    break;
-                case response.NEW_GAME:
-                    sim = Simulation();
-                    if (!sim.onLoad(response.levelName, window)) return -1;
-                    currentState = IN_GAME;
-                    window.setTitle("INJECTED!");
+                    case response.QUIT:
+                        window.close();
+                        break;
+                    case response.NEW_GAME:
+                        delete mission;
+                        mission = new Progression();
+                        if (!mission->onLoad(response.missionPath, window)) return -1;
+                        currentState = IN_GAME;
+                        window.setTitle("INJECTED!");
                 }
             }
             continue;
         }
 
-        sim.update(window, mousePixelPos, delta);
+        if (mission->update(window, mousePixelPos, delta)) {
+            currentState = MAIN_MENU;
+            mainMenu.onLoad(window);
+        }
 
         if (currentState == PAUSED) {
             // Draw and process pause UI
@@ -91,7 +99,7 @@ int gameMain()
                 switch (response) {
                 case RESUME:
                     currentState = IN_GAME;
-                    sim.setPaused(false);
+                    mission->setPaused(false);
                     window.setTitle("INJECTED!");
                     break;
                 case RETURN_MAIN_MENU:
@@ -107,6 +115,8 @@ int gameMain()
 
         window.display();
     }
+
+    delete mission;
 
     return 0;
 }

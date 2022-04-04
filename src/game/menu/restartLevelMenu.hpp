@@ -3,31 +3,30 @@
 #include "button.hpp"
 #include "roundedRectangle.hpp"
 
-enum PauseMenuEvent {
-    RESUME,
+enum class RestartMenuEvent {
+    RESTART,
     RETURN_MAIN_MENU,
     QUIT
 };
 
-class PauseMenu {
+class RestartMenu {
 private:
     sf::View view;
 
     sf::Font menuFont;
     
     sf::RoundedRectangleShape menuOverlay;
-    Button resume;
+    Button restart;
     Button mainMenu;
     Button quit;
 
-    sf::Texture logoTexture;
-    sf::Sprite logoSprite;
+    sf::Text heading;
 
-    PauseMenuEvent response;
+    RestartMenuEvent response;
 public:
-    PauseMenu();
+    RestartMenu();
 
-    const PauseMenuEvent& getResponse() const;
+    const RestartMenuEvent& getResponse() const;
     bool update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const float& deltaTime);
-    void onLoad(sf::RenderWindow& window);
+    // void onLoad(sf::RenderWindow& window);
 };

@@ -1,8 +1,8 @@
 #include "simulation.hpp"
 #include <cmath>
 
-#include <iostream>
-using std::cout;
+// #include <iostream>
+// using std::cout;
 
 bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) {
     if (!level.loadFromFolder(levelPath)) return false;
@@ -16,7 +16,11 @@ bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) 
 
     if (!playerTexture.loadFromFile("assets/textures/player.png")) return false;
     playerTexture.setSmooth(false);
-    player.setTexture(playerTexture, true);
+
+    if (!playerLegTexture.loadFromFile("assets/textures/legs.png")) return false;
+    playerLegTexture.setSmooth(false);
+
+    player.setTextures(playerTexture, playerLegTexture);
 
     return true;
 }
@@ -81,11 +85,33 @@ bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixel
     }
     for (const auto& bullet : bullets)
         window.draw(bullet);
+    player.drawLegs(window);
     window.draw(player);
+
+    // Test level ending stuff - Press O to finish a level
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
+        currentEvent = SimulationEvent::LEVEL_COMPLETE;
+        ended = true;
+        paused = true;
+        return true;
+    }
+
+    // Test level ending stuff - Press L to finish a level, player die
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
+        currentEvent = SimulationEvent::PLAYER_DEAD;
+        ended = true;
+        paused = true;
+        return true;
+    }
 
     return false;
 }
 
 void Simulation::setPaused(const bool& pause) {
-    paused = pause;
+    if (!ended)
+        paused = pause;
+}
+
+const SimulationEvent& Simulation::getEvent() const {
+    return currentEvent;
 }
