@@ -37,9 +37,10 @@ void Button::processInput(sf::RenderWindow& window, const sf::Vector2f& mousePos
         }
         text.setStyle(sf::Text::Underlined);
 
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             clicked = true;
-        else {
+            activated = false;
+        } else {
             // If clicked in previous frame,
             // but mouse btn now unpressed currently
             // activate button
@@ -47,6 +48,8 @@ void Button::processInput(sf::RenderWindow& window, const sf::Vector2f& mousePos
                 activated = true;
                 window.setMouseCursor(pointer);
                 hovered = false;
+            } else {
+                activated = false;
             }
             clicked = false;
         }

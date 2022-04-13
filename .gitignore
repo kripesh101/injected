@@ -1,5 +1,6 @@
 bin/*
 !bin/assets/
+bin/assets/editor_default_level/
 
 lib/
 obj/

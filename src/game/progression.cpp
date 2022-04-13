@@ -1,5 +1,6 @@
 #include <fstream>
 #include "progression.hpp"
+#include <filesystem.hpp>
 
 // #include <iostream>
 // using std::cout;
@@ -65,14 +66,21 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
             }
 
             window.setView(view);
-            fadeOverlay.setFillColor(sf::Color(0, 0, 0, 255 * (1.f - (fadeTime / 2.f))));
+            const float fadeFactor = (1.f - (fadeTime / 2.f));
+            fadeOverlay.setFillColor(sf::Color(0, 0, 0, 255 * fadeFactor));
             window.draw(fadeOverlay);
-            
+
+            // If last step, fade music
+            if ((currentStep + 1) >= missionSteps.size()) {
+                music.setVolume((1.f - fadeFactor) * 30.f);
+            }
+
             if (!paused) fadeTime -= deltaTime;
         
         } else {
             currentStep++;
             if (currentStep >= missionSteps.size()) {
+                music.stop();
                 // Game Completely Finished
                 return true;
             } else {
@@ -110,6 +118,7 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
                 window.close();
                 return true;
             } else if (response == RestartMenuEvent::RETURN_MAIN_MENU) {
+                music.stop();
                 return true;
             } else if (response == RestartMenuEvent::RESTART) {
                 // Remove temporary LEVEL_FAIL
@@ -127,7 +136,17 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
 
 bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow& window) {    
     missionPath = missionFolderPath;
-    std::ifstream file(missionPath + "mission_details.txt");
+
+    if (ghc::filesystem::exists(missionPath + "music.txt")) {
+        std::string musicFileName;
+        std::getline(std::ifstream(missionPath + "music.txt"), musicFileName);
+        if (!music.openFromFile(missionPath + musicFileName)) return false;
+        music.setLoop(true);
+        music.setVolume(30.f);
+        music.play();
+    }
+    
+    std::ifstream file(missionFolderPath + "mission_details.txt");
 
     std::string type;
     std::string path;
@@ -135,6 +154,7 @@ bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow&
     while (file >> type >> path) {
         MissionStep step;
         step.path = path;
+        bool valid = true;
 
         if (type == "LEVEL")
             step.type = StepType::LEVEL;
@@ -142,8 +162,10 @@ bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow&
             step.type = StepType::TRANSITION;
         else if (type == "CREDITS")
             step.type = StepType::CREDITS;
+        else
+            valid = false;
 
-        missionSteps.push_back(step);
+        if (valid) missionSteps.push_back(step);
     }
 
     if (missionSteps.size() == 0) return false;
@@ -188,5 +210,9 @@ bool Progression::setPaused(const bool& pause) {
 
     paused = pause;
     currentSim->setPaused(pause);
+
+    if (pause) music.pause();
+    else music.play();
+
     return true;
 }

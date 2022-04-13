@@ -8,11 +8,10 @@ bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) 
     if (!level.loadFromFolder(levelPath)) return false;
     player.setPosition(level.getPlayerSpawnPos());
 
-    if (!gunSoundBuffer.loadFromFile("assets/sounds/ak47-1.wav")) return false;
-    gunSound.setBuffer(gunSoundBuffer);
+    if (!Bullet::loadBulletTexture()) return false;
 
-    if (!bulletTexture.loadFromFile("assets/textures/bullet_sprite.png")) return false;
-    bulletTexture.setSmooth(false);
+    if (!Rifle::loadSound()) return false;
+    if (!Shotgun::loadSound()) return false;
 
     if (!playerTexture.loadFromFile("assets/textures/player.png")) return false;
     playerTexture.setSmooth(false);
@@ -20,57 +19,41 @@ bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) 
     if (!playerLegTexture.loadFromFile("assets/textures/legs.png")) return false;
     playerLegTexture.setSmooth(false);
 
+    if (!enemyTexture.loadFromFile("assets/textures/enemy.png")) return false;
+    enemyTexture.setSmooth(false);
+
     player.setTextures(playerTexture, playerLegTexture);
+
+    for (const auto& eData : level.getEnemyData()) {
+        Enemy enemy;
+        enemy.setTexture(enemyTexture, true);
+        enemy.setPosition(eData.position);
+        enemy.setRotation(eData.rotation);
+        enemies.push_back(enemy);
+    }
 
     return true;
 }
 
 bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const float& deltaTime) {    
+    extern bool DEBUG;
+    
     if (window.hasFocus() && !paused) {
-        player.processInput(window, mousePixelPos, level, deltaTime);
-        
-        constexpr float fireRate = 600.f; // bullets fired per minute
-        constexpr float timeBetweenShots = 60.f / fireRate;
-
-        static float timeSinceLastShot = 0.f;
-        timeSinceLastShot += deltaTime;
-
-        float bulletSpeed = 500.f * deltaTime;
-
         for (auto it = bullets.begin(); it != bullets.end(); ++it) {
-            const float rotation = it->getRotation();
-            const float radRotation = rotation * 3.1415f / 180.f;
-            sf::Vector2f movement(cos(radRotation), sin(radRotation));
-            movement *= bulletSpeed;
-
-            for (int i = 0; i < 4; i++) {
-                it->move(movement / 4.f);
-                if (level.collides(it->getPosition(), true)) {
-                    bullets.erase(it);
-                    it--;
-                    break;
-                }
+            if (it->update(level, enemies, player, deltaTime)) {
+                bullets.erase(it);
+                it--;
             }
         }
 
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            if (timeSinceLastShot >= timeBetweenShots) {
-                timeSinceLastShot = 0.f;
+        player.processInput(window, mousePixelPos, bullets, level, deltaTime);
 
-                gunSound.play();
-                sf::Sprite bullet(bulletTexture);
-                bullet.setOrigin(bullet.getLocalBounds().width / 2, bullet.getLocalBounds().height / 2);
-                bullet.setPosition(player.getPosition());
-                bullet.setRotation(player.getRotation());
-
-                const float rotation = bullet.getRotation() * 3.1415f / 180.f;
-                sf::Vector2f movement(cos(rotation), sin(rotation));
-                bullet.move(movement * 20.f);
-
-                if (!level.collides(bullet.getGlobalBounds(), true)) {
-                    bullet.move(movement * 8.f);
-                    bullets.push_back(bullet);
-                }
+        for (auto it = enemies.begin(); it != enemies.end(); ++it) {
+            if (it->isAlive()) {
+                it->update(bullets, level, player, deltaTime);
+            } else {
+                enemies.erase(it);
+                it--;
             }
         }
     } else {
@@ -80,25 +63,45 @@ bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixel
     }
         
     window.draw(level);
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Period)) {
+    if (DEBUG && sf::Keyboard::isKeyPressed(sf::Keyboard::Period)) {
         window.draw(player.getBoundingBox());
+
+        for (const auto& enemy : enemies)
+            window.draw(enemy.getBoundingBox());
     }
     for (const auto& bullet : bullets)
         window.draw(bullet);
-    player.drawLegs(window);
-    window.draw(player);
+    for (const auto& enemy : enemies)
+        window.draw(enemy);
 
-    // Test level ending stuff - Press O to finish a level
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
-        currentEvent = SimulationEvent::LEVEL_COMPLETE;
+    hud.update(window, player);
+    if (player.isAlive()) {
+        player.drawLegs(window);
+        window.draw(player);
+    } else {
+        currentEvent = SimulationEvent::PLAYER_DEAD;
         ended = true;
         paused = true;
         return true;
     }
 
-    // Test level ending stuff - Press L to finish a level, player die
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
-        currentEvent = SimulationEvent::PLAYER_DEAD;
+    if (DEBUG) {
+        // Test level ending stuff - Press O to finish a level
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) {
+            enemies.clear();
+        }
+
+        // Test level ending stuff - Press L to finish a level, player die
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
+            currentEvent = SimulationEvent::PLAYER_DEAD;
+            ended = true;
+            paused = true;
+            return true;
+        }
+    }   
+
+    if (enemies.empty()) {
+        currentEvent = SimulationEvent::LEVEL_COMPLETE;
         ended = true;
         paused = true;
         return true;
