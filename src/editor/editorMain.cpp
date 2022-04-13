@@ -38,6 +38,14 @@ int editorMain(const std::string& targetFolder) {
 
     // Preload decoration textures
     std::vector<FileTexture> &decorTextures = lvl.decorTextures;
+    if (fs::exists(targetFolder + "decorations")) {
+        for (const auto & entry : fs::directory_iterator(targetFolder + "decorations")) {
+            FileTexture current;
+            current.location = entry.path().string();
+            current.loadFromFile(current.location);
+            decorTextures.push_back(current);
+        }
+    }
     for (const auto & entry : fs::directory_iterator("assets/textures/decorations")) {
         FileTexture current;
         current.location = entry.path().string();
@@ -55,16 +63,36 @@ int editorMain(const std::string& targetFolder) {
     outline.setOutlineThickness(5.f);
     outline.setOutlineColor(sf::Color(3, 252, 240));
 
+    // Decorations
     sf::Sprite decorPreview;
     decorPreview.setColor(sf::Color(255, 255, 255, 128));
+    
+    std::vector<Decoration>& decorations = lvl.decors;
 
+    // Player Spawn
     sf::Texture playerTex;
     playerTex.loadFromFile("assets/textures/editor/player_preview.png");
     sf::Sprite playerSpawn(playerTex);
     playerSpawn.setOrigin(8.f, 8.f);
     playerSpawn.setPosition(lvl.getPlayerSpawnPos());
 
-    std::vector<Decoration>& decorations = lvl.decors;
+    // Enemy Spawns
+    sf::Texture enemyTex;
+    enemyTex.loadFromFile("assets/textures/editor/enemy_preview.png");
+    
+    sf::Sprite enemySpawnPreview(enemyTex);
+    enemySpawnPreview.setOrigin(8.f, 8.f);
+    enemySpawnPreview.setColor(sf::Color(255, 255, 255, 128));
+    
+    std::vector<sf::Sprite> enemies;
+    for (const auto enemyData : lvl.enemies) {
+        sf::Sprite enemy = sf::Sprite(enemyTex);
+        enemy.setOrigin(8.f, 8.f);
+        enemy.setPosition(enemyData.position);
+        enemy.setRotation(enemyData.rotation);
+        enemies.push_back(enemy);
+    }
+
 
     // Main Loop
     while (window.isOpen()) {
@@ -107,6 +135,13 @@ int editorMain(const std::string& targetFolder) {
                         auto viewPixelPos = sf::Vector2f(sf::Vector2i(mousePos));
                         lvl.playerSpawnPos = viewPixelPos;
                         playerSpawn.setPosition(viewPixelPos);
+                    } 
+                    else if (helper.getCurrentMode() == ENEMY) {
+                        sf::Sprite enemy(enemyTex);
+                        enemy.setOrigin(enemySpawnPreview.getOrigin());
+                        enemy.setPosition(enemySpawnPreview.getPosition());
+                        enemy.setRotation(enemySpawnPreview.getRotation());
+                        enemies.push_back(enemy);
                     }
                 }
 
@@ -118,15 +153,15 @@ int editorMain(const std::string& targetFolder) {
                                 break;
                             }
                         }
+                    } 
+                    else if (helper.getCurrentMode() == ENEMY) {
+                        for (auto it = enemies.begin(); it != enemies.end(); ++it) {
+                            if (it->getGlobalBounds().contains(mousePos)) {
+                                enemies.erase(it);
+                                break;
+                            }
+                        }
                     }
-                }
-            }
-
-            // Decoration Preview Move
-            if (event.type == sf::Event::MouseMoved) {
-                if (helper.getCurrentMode() == DECORATION) {
-                    auto viewPixelPos = sf::Vector2i(mousePos);
-                    decorPreview.setPosition(viewPixelPos.x, viewPixelPos.y);
                 }
             }
 
@@ -149,6 +184,10 @@ int editorMain(const std::string& targetFolder) {
                     // LCtrl -> Rotate Decoration
                     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
                         float angle = 90.f;
+
+                        if (scrollDelta > 0) enemySpawnPreview.rotate(angle);
+                        else enemySpawnPreview.rotate(-angle);
+
                         // Finer rotation
                         if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
                             angle = std::abs(scrollDelta * 2.5f);
@@ -192,6 +231,16 @@ int editorMain(const std::string& targetFolder) {
         }
 
         if (window.hasFocus()) {
+            // Move Enemy or Decoration Previews
+            if (helper.getCurrentMode() == DECORATION) {
+                auto viewPixelPos = sf::Vector2i(mousePos);
+                decorPreview.setPosition(viewPixelPos.x, viewPixelPos.y);
+            }
+            if (helper.getCurrentMode() == ENEMY) {
+                auto viewPixelPos = sf::Vector2i(mousePos);
+                enemySpawnPreview.setPosition(viewPixelPos.x, viewPixelPos.y);
+            }
+
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 if (helper.getCurrentMode() == LEVEL_TILE)
                     level.changeTile(mousePos.x, mousePos.y, helper.getCurrentTileNumber());
@@ -231,6 +280,10 @@ int editorMain(const std::string& targetFolder) {
         window.draw(outline);
         
         window.draw(lvl);
+
+        for (const auto& enemy : enemies)
+            window.draw(enemy);
+
         window.draw(playerSpawn);
 
         // Decoration Preview
@@ -241,13 +294,18 @@ int editorMain(const std::string& targetFolder) {
             window.draw(decorPreview);
         }
 
+        // Enemy Spawn Preview
+        else if (helper.getCurrentMode() == ENEMY) {
+            window.draw(enemySpawnPreview);
+        }
+
         // Status Text
         window.setView(window.getDefaultView());
         helper.updateText(statusText);
         sf::FloatRect backgroundRect = statusText.getLocalBounds();
         sf::RectangleShape background(sf::Vector2f(backgroundRect.width, backgroundRect.height));
         background.setFillColor(sf::Color(0, 0, 0, 128));
-        background.setOutlineColor(background.getFillColor());
+        background.setOutlineColor(sf::Color(0, 0, 0, 128));
         background.setOutlineThickness(5.f);
         window.draw(background, statusText.getTransform());
         window.draw(statusText);
@@ -257,6 +315,15 @@ int editorMain(const std::string& targetFolder) {
 
         // Display
         window.display();
+    }
+
+    // Convert Enemy sprite objects into EnemyData objects for serialization
+    lvl.enemies.clear();
+    for (const auto& enemy : enemies) {
+        EnemyData eData;
+        eData.position = enemy.getPosition(); 
+        eData.rotation = enemy.getRotation();
+        lvl.enemies.push_back(eData);
     }
 
     lvl.saveToFolder(targetFolder);

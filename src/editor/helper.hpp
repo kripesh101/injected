@@ -6,7 +6,8 @@ enum EditorMode {
     LEVEL_TILE,
     WALL_TILE,
     DECORATION,
-    PLAYER_SPAWN
+    PLAYER_SPAWN,
+    ENEMY
 };
 
 class EditorHelper {

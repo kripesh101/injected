@@ -24,7 +24,6 @@ int gameMain()
     settings.antialiasingLevel = 0;
     sf::RenderWindow window(sf::VideoMode(1200, 640), "INJECTED!", sf::Style::Default, settings);
     window.setVerticalSyncEnabled(true);
-    // window.setMouseCursorGrabbed(true);
 
     Button::loadCursor(window);
 
@@ -54,6 +53,7 @@ int gameMain()
                     if (currentState == IN_GAME) {
                         if (mission->setPaused(true)) {
                             currentState = PAUSED;
+                            window.setMouseCursorGrabbed(false);
                             pauseMenu.onLoad(window);
                         }
                     }
@@ -62,6 +62,7 @@ int gameMain()
                         Button::resetCursor(window);
                         mission->setPaused(false);
                         window.setTitle("INJECTED!");
+                        window.setMouseCursorGrabbed(true);
                     }
                 }
             }
@@ -82,6 +83,7 @@ int gameMain()
                         if (!mission->onLoad(response.missionPath, window)) return -1;
                         currentState = IN_GAME;
                         window.setTitle("INJECTED!");
+                        window.setMouseCursorGrabbed(true);
                 }
             }
             continue;
@@ -90,6 +92,7 @@ int gameMain()
         if (mission->update(window, mousePixelPos, delta)) {
             currentState = MAIN_MENU;
             mainMenu.onLoad(window);
+            window.setMouseCursorGrabbed(false);
         }
 
         if (currentState == PAUSED) {
@@ -99,8 +102,10 @@ int gameMain()
                 switch (response) {
                 case RESUME:
                     currentState = IN_GAME;
+                    Button::resetCursor(window);
                     mission->setPaused(false);
                     window.setTitle("INJECTED!");
+                    window.setMouseCursorGrabbed(true);
                     break;
                 case RETURN_MAIN_MENU:
                     currentState = MAIN_MENU;

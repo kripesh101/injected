@@ -6,9 +6,10 @@
 
 Player::Player() : 
     boundingBox(sf::Vector2f(16.f, 16.f)),
-    view(sf::Vector2f(0.f, 0.f), sf::Vector2f(450.f, 250.f)),
+    view(sf::Vector2f(0.f, 0.f), sf::Vector2f(535.f, 300.f)),
     legs(sf::seconds(0.06f)),
-    speed(120.f)
+    speed(140.f),
+    health(3)
 {
     setOrigin(24.f, 24.f);
     setPosition(sf::Vector2f(0.f, 0.f));
@@ -18,6 +19,10 @@ Player::Player() :
     }
     legs.setPosition(0.f, 0.f);
     legs.setOrigin(16.f, 8.f);
+}
+
+void Player::stopLegs() {
+    legs.stop();
 }
 
 void Player::setTextures(const sf::Texture& player, const sf::Texture& legTex) {
@@ -31,7 +36,7 @@ void Player::setPosition(const sf::Vector2f& pos) {
     view.setCenter(pos);
 }
 
-void Player::processInput(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const Level& level, const float& delta) {
+void Player::processInput(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, std::vector<Bullet>& bullets, const Level& level, const float& delta) {
     // Movement
     float moved = speed * delta;
 
@@ -153,12 +158,30 @@ void Player::processInput(sf::RenderWindow& window, const sf::Vector2i& mousePix
     sf::Vector2f cursorWRTPlayer = mousePos - getPosition();
     const float angle = std::atan2(cursorWRTPlayer.y, cursorWRTPlayer.x) * 180. / 3.1415;
     setRotation(angle);
+
+    // Shoot
+    gun.update(delta);
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        gun.shoot(level, bullets, *this, true);
+    }
 }
 
 void Player::drawLegs(sf::RenderWindow& target) const {
+    target.setView(view);
     target.draw(legs);
 }
 
+void Player::bulletHit() {
+    health--;
+}
+
+int Player::getHealth() const {
+    return health;
+}
+
+bool Player::isAlive() const {
+    return (health > 0);
+}
 
 sf::FloatRect Player::getGlobalBounds() const {
     return calculateBounds(getPosition());

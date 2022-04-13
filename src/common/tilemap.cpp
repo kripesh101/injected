@@ -1,6 +1,9 @@
 #include "tilemap.hpp"
 #include <cmath>
 
+// #include <iostream>
+// using std::cout;
+
 bool TileMap::load(const std::string& tileset, sf::Vector2u tilesize2, int* tilesData, unsigned int width, unsigned int height) {
     tileSize = tilesize2;
     tilemapSize = sf::Vector2u(width, height);

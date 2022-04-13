@@ -1,7 +1,10 @@
 #pragma once
 #include "player.hpp"
+#include "enemy/enemy.hpp"
+#include "weapon/bullet.hpp"
 #include <common/level.hpp>
 #include <SFML/Audio.hpp>
+#include "menu/hud.hpp"
 
 enum class SimulationEvent {
     PLAYER_DEAD,
@@ -13,16 +16,17 @@ private:
     Level level;
     Player player;
 
-    sf::Sound gunSound;
-    sf::SoundBuffer gunSoundBuffer;
-    sf::Texture bulletTexture;
+    HUD hud;
+
     sf::Texture playerTexture;
     sf::Texture playerLegTexture;
+    sf::Texture enemyTexture;
 
-    std::vector<sf::Sprite> bullets;
+    std::vector<Bullet> bullets;
+    std::vector<Enemy> enemies;
 
-    bool paused = false;
-    bool ended = false;
+    bool paused;
+    bool ended;
 
     SimulationEvent currentEvent;
 public:

@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <iostream>
 
 constexpr int defaultTileMapSize = 150;
 
@@ -20,7 +19,7 @@ public:
     const sf::Vector2u& getTileMapSize() const;
     int* getTilesData() const;
 
-    ~TileMap() { delete tiles; }
+    ~TileMap() { delete[] tiles; }
 
 private:
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;

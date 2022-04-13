@@ -34,6 +34,8 @@ private:
     sf::Text credits;
     sf::Font creditsFont;
 
+    sf::Music music;
+
     Simulation *currentSim;
 
     RestartMenu restartMenu;

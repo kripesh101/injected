@@ -102,7 +102,22 @@ The player bounding box is always `16 x 16`, which is also the size of the speci
 
 **Important:**
 - The game automatically generates a boundary for all levels **64** pixels outside the tilemap boundary. The player spawn must be within this boundary or the player will be unable to move.
-- No collision checks are done by the editor for invalid positions. Make sure to playtest your map after changing the spawn position!
+- No collision checks are done by the editor for invalid positions. Make sure to playtest your map after changing the player spawn position!
+
+### Enemy Spawn Positions
+
+The enemy spawn positions are represented by a special texture in the editor:
+
+![Enemy Spawn Pos Indicator](bin/assets/textures/editor/enemy_preview.png)
+
+The blue arrow specifies the direction faced by the enemy.
+
+Press `E` while in input mode to switch to Enemy Spawns editing. A preview (similar to Decorations) is shown when in this mode. Press `Left-click` to place an enemy spawn, and press `Right-click` to remove an enemy spawn.
+
+Hold `Ctrl` and scroll the mouse-wheel to rotate the enemy 90°.
+
+**Important:**
+- No collision checks are done by the editor for invalid positions. Make sure to playtest your map after changing the enemy spawn positions!
 
 ## Saving Levels
 
@@ -114,3 +129,56 @@ Closing the editor will automatically save the level.
 
 `decor.txt` stores Decorations Data. Format:\
 `<texture location> <x-coordinate> <y-coordinate> <rotation (in degrees)> <collision (0 or 1)>`
+
+`player_spawn.txt` stores Player Spawn Data. Format:\
+`<x-coordinate> <y-coordinate>`
+
+`enemy_spawns.txt` stores Enemy Spawns Data. Format:\
+`<x-coordinate> <y-coordinate> <rotation (in degrees)>`
+
+All rotations are clockwise.
+
+# Missions Format
+
+Missions are the campaigns you can play in "INJECTED!". By default, the vanilla "INJECTED!" mission is included with every copy of the game. 
+
+The missions directory is `assets/missions/`. Placing a mission folder there will make it show up in the main menu, provided the required files exist.
+
+Creating a custom mission or modifying an existing mission is very simple, as detailed below:
+
+## Information Files
+
+These files are used in the mission select screen in the main menu, when there is more than one mission present in the missions directory.
+
+`title.txt` simply has the title for your mission. Keep it short!
+
+`thumbnail.png` should be a image file of ratio **2:1**. It is simply a thumbnail or icon for your mission.
+
+`description.txt` should include a short description of your mission. Make sure to check how the text looks in the selection menu, as there is no code present for word wrapping.
+
+## Mission Detail File
+
+The `mission_details.txt` file sets the outline for your mission. Each line in the file is a sequence of your mission. There are 3 types of supported sequences:
+
+### `TRANSITION`
+The specified image file will be loaded and shown to the user, until the user presses `Left-click`. The next sequence will be played after a 2 second fade. The image file should be of ratio **16:9**. The idea is to use these transitions for storytelling.
+
+Format: `TRANSITION <image file path>`
+
+### `LEVEL`
+A level will be loaded from the specified folder. The level will be playable until all enemies are killed, or until the player dies. If all enemies are killed, the next sequence will be played after a 2 second fade. If the player dies instead, the restart menu will show up, allowing the user to choose from 3 options:
+
+1. Restart level
+2. Return to main menu
+3. Quit the game
+
+Format: `LEVEL <level folder path>`
+
+### `CREDITS`
+Although named *credits*, this sequence type allows for any text file to be displayed until the user presses `Left-click`. This is similar to the `TRANSITION` sequence, except it simply needs a text file. Make sure to check how the text looks in-game, as there is no code present for word wrapping.
+
+Format: `CREDITS <text file path>`
+
+**Important:** All paths in the mission detail file are relative to the mission folder itself.
+
+For a complete example of the `mission_detail.txt` file, please refer to the included "INJECTED!" mission.
