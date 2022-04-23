@@ -3,6 +3,12 @@
 #include <common/level.hpp>
 #include "animation/AnimatedSprite.hpp"
 #include "weapon/weapon.hpp"
+#include <memory>
+
+enum class GunType {
+    SHOTGUN,
+    RIFLE
+};
 
 class Player : public sf::Sprite {
 private:
@@ -13,17 +19,20 @@ private:
     int health;
     float speed;
 
+    float hitFade;
+
     static sf::FloatRect calculateBounds(const sf::Vector2f& pos);
 
     AnimatedSprite legs;
     Animation legAnimation;
     sf::Texture legSpriteSheet;
 
-    Shotgun gun;
+    std::unique_ptr<Weapon> gun;
 
 public:
-    Player();
+    Player(GunType type = GunType::SHOTGUN);
 
+    void setGunType(const GunType& type);
     void stopLegs();
     void processInput(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, std::vector<Bullet>& bullets, const Level& level, const float& delta);
     void setPosition(const sf::Vector2f& pos);

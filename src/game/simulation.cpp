@@ -13,16 +13,20 @@ bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) 
     if (!Rifle::loadSound()) return false;
     if (!Shotgun::loadSound()) return false;
 
-    if (!playerTexture.loadFromFile("assets/textures/player.png")) return false;
+    if (agent == Agent::SHOTGUN) {
+        if (!playerTexture.loadFromFile("assets/textures/player_shotgun.png")) return false;
+    } else if (agent == Agent::RIFLE) {
+        if (!playerTexture.loadFromFile("assets/textures/player_rifle.png")) return false;
+    }
     playerTexture.setSmooth(false);
 
     if (!playerLegTexture.loadFromFile("assets/textures/legs.png")) return false;
     playerLegTexture.setSmooth(false);
 
+    player.setTextures(playerTexture, playerLegTexture);
+
     if (!enemyTexture.loadFromFile("assets/textures/enemy.png")) return false;
     enemyTexture.setSmooth(false);
-
-    player.setTextures(playerTexture, playerLegTexture);
 
     for (const auto& eData : level.getEnemyData()) {
         Enemy enemy;
@@ -117,4 +121,13 @@ void Simulation::setPaused(const bool& pause) {
 
 const SimulationEvent& Simulation::getEvent() const {
     return currentEvent;
+}
+
+Simulation::Simulation(const Agent& agent) :
+    agent(agent)
+{
+    if (agent == Agent::RIFLE)
+        player.setGunType(GunType::RIFLE);
+    else if (agent == Agent::SHOTGUN)
+        player.setGunType(GunType::SHOTGUN);
 }

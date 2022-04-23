@@ -1,3 +1,10 @@
+MUSIC 16_loop.ogg
+TRANSITION transitions/DIALOGUE1.png
+TRANSITION transitions/DIALOGUE2.png
+TRANSITION transitions/DIALOGUE3.png
+TRANSITION transitions/DIALOGUE4.png
+TRANSITION transitions/DIALOGUE5.png
+MUSIC Perturbator.ogg
 TRANSITION transitions/intro_screen.png
 CREDITS tutorial_text.txt
 LEVEL tutorial/

@@ -12,6 +12,7 @@ protected:
     float timeSinceLastShot;
 public:
     Weapon(const sf::SoundBuffer& soundBuffer, const float& fireRate);
+    virtual ~Weapon();
     void update(const float& delta);
     virtual void shoot(const Level& level, std::vector<Bullet>& bullets, const sf::Sprite& origin, const bool& playerOwned) = 0;
 };

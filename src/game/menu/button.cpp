@@ -1,5 +1,5 @@
 #include "button.hpp"
-#include <iostream>
+// #include <iostream>
 
 Button::Button(const sf::Font& font, const std::string& str, const float& posX, const float& posY, const int& size, const sf::Color& textColor) : defaultPos(posX, posY) {
     text.setFont(font);
@@ -25,6 +25,10 @@ void Button::loadCursor(const sf::RenderWindow& window) {
 
 
 Button::Button(const sf::Font& font, const std::string& str, const sf::Vector2f& pos, const int& size, const sf::Color& textColor) : Button(font, str, pos.x, pos.y, size, textColor) {}
+
+void Button::setString(const sf::String& string) {
+    text.setString(string);
+}
 
 void Button::processInput(sf::RenderWindow& window, const sf::Vector2f& mousePos) {
     // Restore to default position for collision checking

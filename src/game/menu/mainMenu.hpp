@@ -38,6 +38,12 @@ private:
     sf::Sprite logoSprite;
     MainMenuEvent response;
 
+    Button volumeUp;
+    sf::Text volumeLabel;
+    Button volumeDown;
+
+    Button fullscreenToggle;
+
     void updateMissionView(const int& index);
 public:
     MainMenu();

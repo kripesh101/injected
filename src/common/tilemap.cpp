@@ -4,7 +4,7 @@
 // #include <iostream>
 // using std::cout;
 
-bool TileMap::load(const std::string& tileset, sf::Vector2u tilesize2, int* tilesData, unsigned int width, unsigned int height) {
+bool TileMap::load(const std::string& tileset, sf::Vector2u tilesize2, std::shared_ptr<int []>& tilesData, unsigned int width, unsigned int height) {
     tileSize = tilesize2;
     tilemapSize = sf::Vector2u(width, height);
     tiles = tilesData;
@@ -144,17 +144,17 @@ const sf::Vector2u& TileMap::getTileMapSize() const {
     return tilemapSize;
 }
 
-int* TileMap::getTilesData() const {
+std::shared_ptr<int []> TileMap::getTilesData() const {
     return tiles;
 }
 
-bool deserializeTileData(const std::string& file, int& width, int& height, int*& data) {
+bool deserializeTileData(const std::string& file, int& width, int& height, std::shared_ptr<int []>& data) {
     sf::Image img;
     if (img.loadFromFile(file)) {
         auto size = img.getSize();
         width = size.x;
         height = size.y;
-        data = new int[width * height]();
+        data.reset(new int[width * height]());
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -167,7 +167,7 @@ bool deserializeTileData(const std::string& file, int& width, int& height, int*&
         return false;
 }
 
-void serializeTileData(const std::string& file, const int& width, const int& height, const int* data) {
+void serializeTileData(const std::string& file, const int& width, const int& height, const std::shared_ptr<int []>& data) {
     sf::Image img;
     img.create(width, height);
     for (int i = 0; i < width; i++) {

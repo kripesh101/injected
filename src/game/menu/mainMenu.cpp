@@ -7,6 +7,8 @@ namespace fs = ghc::filesystem;
 // #include <iostream>
 // using std::cout;
 
+int volume = 50;
+
 bool MainMenu::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const float& deltaTime) {   
     window.setView(view);
     
@@ -15,6 +17,9 @@ bool MainMenu::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPo
         if (!missionView) {
             newGame.processInput(window, mousePos);
             quit.processInput(window, mousePos);
+            volumeUp.processInput(window, mousePos);
+            volumeDown.processInput(window, mousePos);
+            fullscreenToggle.processInput(window, mousePos);
         } else {
             missionLeft.processInput(window, mousePos);
             missionRight.processInput(window, mousePos);
@@ -23,9 +28,16 @@ bool MainMenu::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPo
         }
     }
 
+    volumeLabel.setString("      " + std::to_string(volume) + "%\nGame Volume");
+
     window.draw(logoSprite);
     window.draw(newGame);
     window.draw(quit);
+    window.draw(volumeUp);
+    window.draw(volumeLabel);
+    window.draw(volumeDown);
+    window.draw(fullscreenToggle);
+
 
     if (missionView) {
         window.draw(missionMenuOverlay);
@@ -51,6 +63,38 @@ bool MainMenu::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPo
         }
 
     } else {
+        if (fullscreenToggle.isPressed()) {
+            static bool fullscreen = false;
+            
+            sf::ContextSettings settings;
+            settings.antialiasingLevel = 0;
+            
+            window.close();
+            
+            if (fullscreen)
+                window.create(sf::VideoMode(1200, 640), "INJECTED!", sf::Style::Default, settings);
+            else
+                window.create(sf::VideoMode::getFullscreenModes()[0], "INJECTED!", sf::Style::Fullscreen, settings);
+            
+            window.setVerticalSyncEnabled(true);
+            fullscreen = !fullscreen;
+
+            if (fullscreen) fullscreenToggle.setString("Fullscreen ON");
+            else fullscreenToggle.setString("Fullscreen OFF");
+        }
+
+        if (volumeUp.isPressed()) {
+            if (volume < 10) volume += 2;
+            else volume += 10;
+            if (volume > 100) volume = 100;
+        }
+
+        if (volumeDown.isPressed()) {
+            if (volume <= 10) volume -= 2;
+            else volume -= 10;
+            if (volume < 0) volume = 0;
+        }
+
         if (newGame.isPressed()) {
 
             missionPaths.clear();
@@ -93,16 +137,20 @@ MainMenu::MainMenu() :
     missionMenuOverlay(sf::Vector2f(900.f, 700.f), 20.f, 10),
     
     // Buttons
-    newGame     (menuFont, "NEW GAME",  100.f, 600.f),
-    quit        (menuFont, "QUIT",      100.f, 750.f),
-    missionLeft (menuFont, "<",         550.f, 340.f),
-    missionRight(menuFont, ">",         1320.f, 340.f),
-    missionBack (menuFont, "BACK",      550.f, 220.f, 40),
-    missionPlay (menuFont, "PLAY",      880.f, 800.f, 72),
+    newGame         (menuFont, "NEW GAME",  100.f, 600.f),
+    quit            (menuFont, "QUIT",      100.f, 750.f),
+    missionLeft     (menuFont, "<",         550.f, 340.f),
+    missionRight    (menuFont, ">",         1320.f, 340.f),
+    missionBack     (menuFont, "BACK",      550.f, 220.f, 40),
+    missionPlay     (menuFont, "PLAY",      880.f, 800.f, 72),
+    volumeUp        (menuFont, "+",         1330.f, 950.f),
+    volumeDown      (menuFont, "-",         1850.f, 950.f),
+    fullscreenToggle(menuFont, "Fullscreen OFF", 1370.f, 770.f),
 
     // Text
     missionTitle      ("", menuFont, 64),
-    missionDescription("", descriptionFont, 32)
+    missionDescription("", descriptionFont, 32),
+    volumeLabel       ("", descriptionFont, 64)
 {
     missionMenuOverlay.setPosition(510.f, 190.f);
     missionMenuOverlay.setFillColor(sf::Color::Black);
@@ -119,6 +167,8 @@ MainMenu::MainMenu() :
     logoTexture.loadFromFile("assets/textures/logo.png");
     logoSprite.setTexture(logoTexture, true);
     logoSprite.setPosition(50.f, 30.f);
+
+    volumeLabel.setPosition(1410.f, 900.f);
 }
 
 const MainMenuEvent& MainMenu::getResponse() const {
@@ -133,7 +183,7 @@ void MainMenu::updateMissionView(const int& index) {
     if (index >= missionPaths.size() || index < 0)
         return;
     
-    const auto &path = missionPaths[index]; 
+    const auto &path = missionPaths[index];
 
     std::string title;
     std::string description;

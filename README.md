@@ -114,6 +114,8 @@ The blue arrow specifies the direction faced by the enemy.
 
 Press `E` while in input mode to switch to Enemy Spawns editing. A preview (similar to Decorations) is shown when in this mode. Press `Left-click` to place an enemy spawn, and press `Right-click` to remove an enemy spawn.
 
+The enemy bounding box is always `16 x 16`, which is also the size of the special texture (see above). Use the red boundaries of the texture to help perfectly align your enemy spawn, if desired.
+
 Hold `Ctrl` and scroll the mouse-wheel to rotate the enemy 90°.
 
 **Important:**
@@ -158,12 +160,20 @@ These files are used in the mission select screen in the main menu, when there i
 
 ## Mission Detail File
 
-The `mission_details.txt` file sets the outline for your mission. Each line in the file is a sequence of your mission. There are 3 types of supported sequences:
+The `mission_details.txt` file sets the outline for your mission. Each line in the file is a sequence of your mission. There are 4 types of supported sequences:
 
 ### `TRANSITION`
 The specified image file will be loaded and shown to the user, until the user presses `Left-click`. The next sequence will be played after a 2 second fade. The image file should be of ratio **16:9**. The idea is to use these transitions for storytelling.
 
 Format: `TRANSITION <image file path>`
+
+### `MUSIC`
+The specified music track will start playing, until another `MUSIC` sequence is reached. Having multiple `MUSIC` sequences is handy if you want to use different music tracks for dialogue and gameplay, for example. Similarly, use this if you want different music tracks for each level.
+
+This is the only way to get music working in INJECTED!, so you must have at least one `MUSIC` sequence (preferably at the start of the mission details file) if you want a track to be played during your mission.
+
+Format: `MUSIC <music file path>`\
+Supported Files: `ogg` and `wav` formats
 
 ### `LEVEL`
 A level will be loaded from the specified folder. The level will be playable until all enemies are killed, or until the player dies. If all enemies are killed, the next sequence will be played after a 2 second fade. If the player dies instead, the restart menu will show up, allowing the user to choose from 3 options:
@@ -182,3 +192,17 @@ Format: `CREDITS <text file path>`
 **Important:** All paths in the mission detail file are relative to the mission folder itself.
 
 For a complete example of the `mission_detail.txt` file, please refer to the included "INJECTED!" mission.
+
+# Testing Levels and Missions
+Launching `main.exe` with the `-debug` parameter passed may be handy, as it enables a few test shortcuts:
+
+1. Press `O` to simulate victory (all enemies will be killed)
+Use this to check your mission structure without having to finish levels. 
+
+2. Press `.` to show hitboxes for enemies and the player
+Use this to check for collision issues.
+
+3. Press `L` to simulate defeat (restart screen will be shown)
+Not very useful except if you simply want to keep replaying the level for testing etc.
+
+`-debug` parameter will also enable frametime spike logs in the console. Please ignore the warnings.

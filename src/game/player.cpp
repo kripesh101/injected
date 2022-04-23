@@ -4,13 +4,17 @@
 // #include <iostream>
 // using std::cout;
 
-Player::Player() : 
+Player::Player(GunType type) : 
     boundingBox(sf::Vector2f(16.f, 16.f)),
     view(sf::Vector2f(0.f, 0.f), sf::Vector2f(535.f, 300.f)),
     legs(sf::seconds(0.06f)),
     speed(140.f),
-    health(3)
+    health(3),
+    hitFade(0.f)
 {
+    if (type == GunType::RIFLE) gun.reset(new Rifle());
+    else gun.reset(new Shotgun());
+
     setOrigin(24.f, 24.f);
     setPosition(sf::Vector2f(0.f, 0.f));
 
@@ -160,9 +164,17 @@ void Player::processInput(sf::RenderWindow& window, const sf::Vector2i& mousePix
     setRotation(angle);
 
     // Shoot
-    gun.update(delta);
+    gun->update(delta);
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        gun.shoot(level, bullets, *this, true);
+        gun->shoot(level, bullets, *this, true);
+    }
+
+    hitFade -= delta;
+    if (hitFade > 0.f) {
+        const float hitFactor = 1.f - (hitFade / 0.3f);
+        setColor(sf::Color(255, 255 * hitFactor, 255 * hitFactor));
+    } else {
+        setColor(sf::Color::White);
     }
 }
 
@@ -173,6 +185,7 @@ void Player::drawLegs(sf::RenderWindow& target) const {
 
 void Player::bulletHit() {
     health--;
+    hitFade = 0.3f;
 }
 
 int Player::getHealth() const {
@@ -181,6 +194,11 @@ int Player::getHealth() const {
 
 bool Player::isAlive() const {
     return (health > 0);
+}
+
+void Player::setGunType(const GunType& type) {
+    if (type == GunType::RIFLE) gun.reset(new Rifle());
+    else gun.reset(new Shotgun());
 }
 
 sf::FloatRect Player::getGlobalBounds() const {
