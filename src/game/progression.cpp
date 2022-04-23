@@ -5,14 +5,15 @@
 // #include <iostream>
 // using std::cout;
 
+extern int volume;
+
 bool Progression::loadCurrentStep(sf::RenderWindow& window) {
     const MissionStep& cStep = missionSteps[currentStep]; // Current Step
     const StepType& cType = cStep.type;
     const std::string cPath = missionPath + cStep.path; // Path specified in current step
 
     if (cType == StepType::LEVEL) {
-        delete currentSim;
-        currentSim = new Simulation();
+        currentSim.reset(new Simulation(agent));
         if (!currentSim->onLoad(cPath, window)) return false;
     }
     
@@ -28,6 +29,14 @@ bool Progression::loadCurrentStep(sf::RenderWindow& window) {
         std::string text;
         std::getline(std::ifstream(cPath), text, '\0');
         credits.setString(text);
+    }
+
+    else if (cType == StepType::MUSIC) {
+        music.stop();
+        music.openFromFile(cPath);
+        music.setLoop(true);
+        music.setVolume(30.f * volume / 100.f);
+        music.play();
     }
 
     currentType = cType;
@@ -48,6 +57,8 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
                 MissionStep newStep;
                 newStep.type = StepType::LEVEL_FAIL;
                 missionSteps.insert(newPos, newStep);
+
+                window.setMouseCursorGrabbed(false);
             }
         }
     }
@@ -70,12 +81,14 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
             fadeOverlay.setFillColor(sf::Color(0, 0, 0, 255 * fadeFactor));
             window.draw(fadeOverlay);
 
-            // If last step, fade music
-            if ((currentStep + 1) >= missionSteps.size()) {
-                music.setVolume((1.f - fadeFactor) * 30.f);
+            // If last step OR next step is music change, fade music
+            if ((currentStep + 1) >= missionSteps.size() ||
+                missionSteps[currentStep + 1].type == StepType::MUSIC
+            ) {
+                music.setVolume((1.f - fadeFactor) * 30.f * volume / 100.f);
             }
 
-            if (!paused) fadeTime -= deltaTime;
+            if (window.hasFocus()) fadeTime -= deltaTime;
         
         } else {
             currentStep++;
@@ -121,6 +134,8 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
                 music.stop();
                 return true;
             } else if (response == RestartMenuEvent::RESTART) {
+                window.setMouseCursorGrabbed(true);
+
                 // Remove temporary LEVEL_FAIL
                 missionSteps.erase(missionSteps.begin() + currentStep);
                 // Reset step
@@ -128,7 +143,22 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
                 loadCurrentStep(window);
             }
         }
+    }
+    // Agent Selection
+    else if (currentType == StepType::AGENT_SELECT) {
+        if (characterSelect.update(window, mousePixelPos, deltaTime)) {
+            agent = characterSelect.getSelectedAgent();
 
+            // Skip immediately to next step
+            currentType = StepType::FADING;
+            fadeTime = 0.f;
+        }
+    }
+    // Music Change
+    else if (currentType == StepType::MUSIC) {
+        // Skip immediately to next step, as music changing is handled separate of this update function
+        currentType = StepType::FADING;
+        fadeTime = 0.f;
     }
 
     return false;
@@ -137,14 +167,14 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
 bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow& window) {    
     missionPath = missionFolderPath;
 
-    if (ghc::filesystem::exists(missionPath + "music.txt")) {
-        std::string musicFileName;
-        std::getline(std::ifstream(missionPath + "music.txt"), musicFileName);
-        if (!music.openFromFile(missionPath + musicFileName)) return false;
-        music.setLoop(true);
-        music.setVolume(30.f);
-        music.play();
-    }
+    // if (ghc::filesystem::exists(missionPath + "music.txt")) {
+    //     std::string musicFileName;
+    //     std::getline(std::ifstream(missionPath + "music.txt"), musicFileName);
+    //     if (!music.openFromFile(missionPath + musicFileName)) return false;
+    //     music.setLoop(true);
+    //     music.setVolume(30.f * volume / 100.f);
+    //     music.play();
+    // }
     
     std::ifstream file(missionFolderPath + "mission_details.txt");
 
@@ -162,6 +192,8 @@ bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow&
             step.type = StepType::TRANSITION;
         else if (type == "CREDITS")
             step.type = StepType::CREDITS;
+        else if (type == "MUSIC")
+            step.type = StepType::MUSIC;
         else
             valid = false;
 
@@ -169,6 +201,10 @@ bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow&
     }
 
     if (missionSteps.size() == 0) return false;
+
+    // Character Select
+    missionSteps.insert(missionSteps.begin(), {StepType::AGENT_SELECT});
+
     return loadCurrentStep(window);    
 }
 
@@ -180,16 +216,12 @@ void Progression::loadFont() {
 }
 //*/
 
-Progression::~Progression() {
-    delete currentSim;
-}
-
 Progression::Progression() :
     view(sf::Vector2f(1920.f / 2, 1080.f / 2), sf::Vector2f(1920.f, 1080.f)),
     fadeOverlay(sf::Vector2f(1920.f, 1080.f)),
     currentStep(0),
     credits("", creditsFont, 40),
-    currentSim(new Simulation()),
+    currentSim(new Simulation(agent)),
     paused(false)
 {
     creditsFont.loadFromFile("assets/fonts/credits.ttf");
@@ -199,6 +231,8 @@ Progression::Progression() :
 
     fadeOverlay.setPosition(0.f, 0.f);
     transitionSprite.setPosition(0.f, 0.f);
+
+    music.stop();
 }
 
 bool Progression::setPaused(const bool& pause) {

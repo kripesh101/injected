@@ -18,6 +18,7 @@ public:
     Button();
 
     void processInput(sf::RenderWindow& window, const sf::Vector2f& mousePos);
+    void setString(const sf::String& string);
     bool isPressed() const;
     static void loadCursor(const sf::RenderWindow& window);
     static void resetCursor(sf::RenderWindow& window);

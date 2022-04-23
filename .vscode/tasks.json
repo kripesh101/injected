@@ -25,7 +25,7 @@
             "command": [
                 "& 'mingw32-make.exe';",
                 "cd '.\\bin';",
-                "& '.\\main.exe'"
+                "& '.\\main.exe' -debug"
             ],
             "group": {
                 "kind": "build",

@@ -3,12 +3,14 @@
 #include <common/level.hpp>
 #include <common/utils.hpp>
 
-// #include <iostream>
-// using std::cout;
+#include <iostream>
+using std::cout;
 
 #include "menu/mainMenu.hpp"
 #include "menu/pauseMenu.hpp"
 #include "progression.hpp"
+
+extern bool DEBUG;
 
 enum State {
     MAIN_MENU,
@@ -29,7 +31,7 @@ int gameMain()
 
     MainMenu mainMenu;
     PauseMenu pauseMenu;
-    Progression *mission = new Progression();
+    std::unique_ptr<Progression> mission;
 
     mainMenu.onLoad(window);
 
@@ -39,6 +41,9 @@ int gameMain()
     while (window.isOpen())
     {
         float delta = clock.restart().asSeconds();
+
+        if (DEBUG && delta > 0.035f)
+            cout << "Warning! - Frametime spike detected - " << delta << "\n";
 
         const sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window);
 
@@ -78,8 +83,7 @@ int gameMain()
                         window.close();
                         break;
                     case response.NEW_GAME:
-                        delete mission;
-                        mission = new Progression();
+                        mission.reset(new Progression());
                         if (!mission->onLoad(response.missionPath, window)) return -1;
                         currentState = IN_GAME;
                         window.setTitle("INJECTED!");
@@ -120,8 +124,6 @@ int gameMain()
 
         window.display();
     }
-
-    delete mission;
 
     return 0;
 }

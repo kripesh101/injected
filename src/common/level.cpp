@@ -33,12 +33,12 @@ void serializeEnemyData(const std::string& filePath, const std::vector<EnemyData
 bool Level::loadFromFolder(const std::string& folderPath, const bool fallback) {
     if (fallback) fs::create_directories(folderPath);
     
-    int *levelData;
+    std::shared_ptr<int []> levelData;
 
     // Level TileMap
     int tilesWidth = 150, tilesHeight = 150;
     if (!deserializeTileData(folderPath + "level.png", tilesWidth, tilesHeight, levelData)) {        
-        if (fallback) levelData = new int[tilesWidth * tilesHeight]();
+        if (fallback) levelData.reset(new int[tilesWidth * tilesHeight]());
         else return false;
     }
     // Load level-specific tileset texture if it exists
@@ -50,7 +50,7 @@ bool Level::loadFromFolder(const std::string& folderPath, const bool fallback) {
     // Walls TileMap
     tilesWidth = 300, tilesHeight = 300;
     if (!deserializeTileData(folderPath + "wall.png", tilesWidth, tilesHeight, levelData)) {
-        if (fallback) levelData = new int[tilesWidth * tilesHeight]();
+        if (fallback) levelData.reset(new int[tilesWidth * tilesHeight]());
         else return false;
     }
     // Load level-specific wall tileset texture if it exists

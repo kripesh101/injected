@@ -1,13 +1,17 @@
 #pragma once
 #include "simulation.hpp"
 #include "menu/restartLevelMenu.hpp"
+#include "menu/characterSelect.hpp"
+#include <memory>
 
 enum class StepType {
     LEVEL,
     LEVEL_FAIL,
     TRANSITION,
     FADING,
-    CREDITS
+    CREDITS,
+    MUSIC,
+    AGENT_SELECT
 };
 
 struct MissionStep {
@@ -18,7 +22,6 @@ struct MissionStep {
 class Progression {
 public:
     Progression();
-    ~Progression();
     bool update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPos, const float& deltaTime);
     bool onLoad(const std::string& missionFolderPath, sf::RenderWindow& window);
     bool setPaused(const bool& pause);
@@ -36,9 +39,12 @@ private:
 
     sf::Music music;
 
-    Simulation *currentSim;
+    std::unique_ptr<Simulation> currentSim;
 
     RestartMenu restartMenu;
+    CharacterSelect characterSelect;
+
+    Agent agent;
 
     bool paused;
 

@@ -1,5 +1,6 @@
 #include "enemy.hpp"
 #include <cmath>
+#include <common/utils.hpp>
 
 // #include <iostream>
 // using std::cout;
@@ -9,10 +10,30 @@ Enemy::Enemy() :
     health(2),
     speed(100.f),
     playerSeenCooldown(0.65f),
-    playerSeen(false)
+    playerSeen(false),
+    hitFade(0.f),
+    attackRadius(175.f),
+    awarenessRadius(40.f),
+    gun(new Rifle())
 {
-    setOrigin(24.f, 24.f);   
+    // cout << "Enemy make\n";
+    setOrigin(24.f, 24.f);
+    
+    if (rand(5) == 1) gun.reset(new Shotgun());
 }
+
+// // Copy constructor
+// Enemy::Enemy(const Enemy& obj) {
+//     cout << "Enemy Copying..\n";
+//     if (rand(5) == 1) gun = new Shotgun();
+//     else gun = new Rifle();
+// }
+
+// Enemy::~Enemy() {
+//     cout << "Enemy rekt";
+//     delete gun;
+//     cout << ".\n";
+// }
 
 void Enemy::setPosition(const sf::Vector2f& pos) {
     sf::Sprite::setPosition(pos);
@@ -21,7 +42,20 @@ void Enemy::setPosition(const sf::Vector2f& pos) {
 }
 
 bool Enemy::update(std::vector<Bullet>& bullets, const Level& level, const Player& player, const float& delta) {
-    gun.update(delta);
+    // gun.update(delta);
+    gun->update(delta);
+
+    if (hitFade > 0.f) {
+        const float hitFactor = 1.f - (hitFade / 0.5f);
+        setColor(sf::Color(255, 255 * hitFactor, 255 * hitFactor));
+        hitFade -= delta;
+    } else {
+        setColor(sf::Color::White);
+
+        // Reset hyper awareness
+        attackRadius = 175.f;
+        awarenessRadius = 40.f;
+    }
     
     const sf::Vector2f enemyToPlayer = player.getPosition() - getPosition();
     const float distance = std::sqrt(enemyToPlayer.x * enemyToPlayer.x + enemyToPlayer.y * enemyToPlayer.y);
@@ -39,13 +73,15 @@ bool Enemy::update(std::vector<Bullet>& bullets, const Level& level, const Playe
             playerSeenCooldown -= delta;
             if (playerSeenCooldown <= 0.f) {
                 playerSeen = true;
-                gun.shoot(level, bullets, *this, false);
+                gun->shoot(level, bullets, *this, false);
+                // gun.shoot(level, bullets, *this, false);
                 return true;
             }
         }
     } else {
         if (playerSeen) playerSeenCooldown = 0.25f;
     }
+
     return false;
 }
 
@@ -69,6 +105,14 @@ const sf::RectangleShape& Enemy::getBoundingBox() const {
 
 void Enemy::bulletHit() {
     health--;
+    hitFade = 0.5f;
+
+    // Make enemy temporarily hyper aware
+    attackRadius = 400.f;
+    awarenessRadius = 100.f;
+
+    playerSeen = true;
+    if (playerSeenCooldown > 0.25f) playerSeenCooldown = 0.25f;
 }
 
 bool Enemy::isAlive() const {
