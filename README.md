@@ -88,6 +88,14 @@ You can press `R` to reset the rotation if needed.
 
 4. Rotations have no additional impact on the rendering of decorations. Feel free do any rotations with non-collidable decorations!
 
+### Consumeable Hearts
+
+Press `H` while in input mode to Consumeable Hearts editing. `Left-click` to place the heart, and `Right-click` to delete a heart.
+
+A heart will heal the player 1 health when the player touches it.
+
+Make sure to place the heart in places that the player can navigate to! The heart's bounding box is `15 x 13`.
+
 ### Player Spawn Position
 
 The player spawn position is represented by a special texture in the editor:
@@ -137,6 +145,9 @@ Closing the editor will automatically save the level.
 
 `enemy_spawns.txt` stores Enemy Spawns Data. Format:\
 `<x-coordinate> <y-coordinate> <rotation (in degrees)>`
+
+`hearts.txt` stores Consumeable Hearts Data. Format:\
+`<x-coordinate> <y-coordinate>`
 
 All rotations are clockwise.
 
