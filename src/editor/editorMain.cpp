@@ -93,6 +93,21 @@ int editorMain(const std::string& targetFolder) {
         enemies.push_back(enemy);
     }
 
+    // Hearts
+    sf::Texture heartTex;
+    heartTex.loadFromFile("assets/textures/heart_floor.png");
+
+    sf::Sprite heartPreview(heartTex);
+    heartPreview.setOrigin(7.5f, 6.5f);
+    heartPreview.setColor(sf::Color(255, 255, 255, 128));
+
+    std::vector<sf::Sprite> hearts;
+    for (const auto heartData : lvl.hearts) {
+        sf::Sprite heart(heartTex);
+        heart.setOrigin(7.5f, 6.5f);
+        heart.setPosition(heartData);
+        hearts.push_back(heart);
+    }
 
     // Main Loop
     while (window.isOpen()) {
@@ -143,6 +158,12 @@ int editorMain(const std::string& targetFolder) {
                         enemy.setRotation(enemySpawnPreview.getRotation());
                         enemies.push_back(enemy);
                     }
+                    else if (helper.getCurrentMode() == HEART) {
+                        sf::Sprite heart(heartTex);
+                        heart.setOrigin(heartPreview.getOrigin());
+                        heart.setPosition(heartPreview.getPosition());
+                        hearts.push_back(heart);
+                    }
                 }
 
                 if (event.mouseButton.button == sf::Mouse::Right) {
@@ -158,6 +179,14 @@ int editorMain(const std::string& targetFolder) {
                         for (auto it = enemies.begin(); it != enemies.end(); ++it) {
                             if (it->getGlobalBounds().contains(mousePos)) {
                                 enemies.erase(it);
+                                break;
+                            }
+                        }
+                    }
+                    else if (helper.getCurrentMode() == HEART) {
+                        for (auto it = hearts.begin(); it != hearts.end(); ++it) {
+                            if (it->getGlobalBounds().contains(mousePos)) {
+                                hearts.erase(it);
                                 break;
                             }
                         }
@@ -240,6 +269,10 @@ int editorMain(const std::string& targetFolder) {
                 auto viewPixelPos = sf::Vector2i(mousePos);
                 enemySpawnPreview.setPosition(viewPixelPos.x, viewPixelPos.y);
             }
+            if (helper.getCurrentMode() == HEART) {
+                auto viewPixelPos = sf::Vector2i(mousePos);
+                heartPreview.setPosition(viewPixelPos.x, viewPixelPos.y);
+            }
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 if (helper.getCurrentMode() == LEVEL_TILE)
@@ -281,6 +314,9 @@ int editorMain(const std::string& targetFolder) {
         
         window.draw(lvl);
 
+        for (const auto& heart : hearts)
+            window.draw(heart);
+
         for (const auto& enemy : enemies)
             window.draw(enemy);
 
@@ -297,6 +333,11 @@ int editorMain(const std::string& targetFolder) {
         // Enemy Spawn Preview
         else if (helper.getCurrentMode() == ENEMY) {
             window.draw(enemySpawnPreview);
+        }
+
+        // Hearts Preview
+        else if (helper.getCurrentMode() == HEART) {
+            window.draw(heartPreview);
         }
 
         // Status Text
@@ -324,6 +365,11 @@ int editorMain(const std::string& targetFolder) {
         eData.position = enemy.getPosition(); 
         eData.rotation = enemy.getRotation();
         lvl.enemies.push_back(eData);
+    }
+
+    lvl.hearts.clear();
+    for (const auto& heart : hearts) {
+        lvl.hearts.push_back(heart.getPosition());
     }
 
     lvl.saveToFolder(targetFolder);

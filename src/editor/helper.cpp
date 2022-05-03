@@ -30,7 +30,7 @@ void EditorHelper::updateText(sf::Text& text) const {
     if (userEntering) {
         str += "\nNext: ";
         textHelper(str, nextMode, nextTileNum);
-        if (nextMode == NONE) str += " [W - Wall, T - Level, D - Decoration, P - Player Spawn, E - Enemy]";
+        if (nextMode == NONE) str += " [W - Wall, T - Level, D - Decoration, P - Player Spawn, E - Enemy, H - Heart]";
     }
 
     text.setString(str);
@@ -57,6 +57,9 @@ void EditorHelper::textHelper(sf::String& str, EditorMode mode, int tileNum) con
             break;
         case ENEMY:
             str += "Enemy";
+            break;
+        case HEART:
+            str += "Heart";
     }
 }
 
@@ -109,6 +112,10 @@ void EditorHelper::processInputs(const sf::Event& event) {
 
             if (event.key.code == sf::Keyboard::E) {
                 nextMode = ENEMY;
+            }
+
+            if (event.key.code == sf::Keyboard::H) {
+                nextMode = HEART;
             }
 
             if (event.key.code == sf::Keyboard::Backspace) {

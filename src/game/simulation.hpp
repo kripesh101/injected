@@ -22,9 +22,11 @@ private:
     sf::Texture playerTexture;
     sf::Texture playerLegTexture;
     sf::Texture enemyTexture;
+    sf::Texture heartTexture;
 
     std::vector<Bullet> bullets;
     std::vector<Enemy> enemies;
+    std::vector<sf::Sprite> hearts;
 
     bool paused = false;
     bool ended = false;

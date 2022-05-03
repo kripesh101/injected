@@ -18,6 +18,17 @@ void deserializeEnemyData(const std::string& filePath, std::vector<EnemyData>& e
     }
 }
 
+void deserializeHeartsData(const std::string& filePath, std::vector<sf::Vector2f>& hearts) {
+    if (!fs::exists(filePath)) return;
+
+    std::ifstream file(filePath);
+    float posX, posY;
+
+    while (file >> posX >> posY) {
+        hearts.push_back(sf::Vector2f(posX, posY));
+    }
+}
+
 void serializeEnemyData(const std::string& filePath, const std::vector<EnemyData>& enemies) {
     std::ofstream file(filePath);
 
@@ -25,6 +36,19 @@ void serializeEnemyData(const std::string& filePath, const std::vector<EnemyData
         file << enemy.position.x << " "
         << enemy.position.y << " "
         << enemy.rotation << "\n";
+    }
+
+    file.close();
+}
+
+void serializeHeartsData(const std::string& filePath, const std::vector<sf::Vector2f>& hearts)
+{
+    std::ofstream file(filePath);
+
+    for (const auto &heart : hearts)
+    {
+        file << heart.x << " "
+        << heart.y << "\n";
     }
 
     file.close();
@@ -73,6 +97,7 @@ bool Level::loadFromFolder(const std::string& folderPath, const bool fallback) {
     }
 
     deserializeEnemyData(folderPath + "enemy_spawns.txt", enemies);
+    deserializeHeartsData(folderPath + "hearts.txt", hearts);
 
     return true;
 }
@@ -91,6 +116,7 @@ void Level::saveToFolder(const std::string& folderPath) const {
     spawnFile.close();
 
     serializeEnemyData(folderPath + "enemy_spawns.txt", enemies);
+    serializeHeartsData(folderPath + "hearts.txt", hearts);
 }
 
 void Level::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -107,6 +133,10 @@ const sf::Vector2f& Level::getPlayerSpawnPos() const {
 
 const std::vector<EnemyData>& Level::getEnemyData() const {
     return enemies;
+}
+
+const std::vector<sf::Vector2f>& Level::getHeartsData() const {
+    return hearts;
 }
 
 bool Level::collides(const sf::Vector2f& point, const bool& ignoreDecors) const {

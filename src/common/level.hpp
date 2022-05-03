@@ -30,7 +30,7 @@ public:
 
     const sf::Vector2f& getPlayerSpawnPos() const;
     const std::vector<EnemyData>& getEnemyData() const;
-
+    const std::vector<sf::Vector2f> &getHeartsData() const;
 
     friend int editorMain(const std::string& targetFolder);
     
@@ -46,4 +46,5 @@ private:
 
     sf::Vector2f playerSpawnPos = sf::Vector2f(-32.0f, -32.0f);
     std::vector<EnemyData> enemies;
+    std::vector<sf::Vector2f> hearts;
 };

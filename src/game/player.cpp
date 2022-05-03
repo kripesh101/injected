@@ -186,6 +186,10 @@ void Player::bulletHit() {
     hitFade = 0.3f;
 }
 
+void Player::heal() {
+    health++;
+}
+
 int Player::getHealth() const {
     return health;
 }

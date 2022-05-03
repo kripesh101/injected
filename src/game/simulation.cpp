@@ -28,12 +28,22 @@ bool Simulation::onLoad(const std::string& levelPath, sf::RenderWindow& window) 
     if (!enemyTexture.loadFromFile("assets/textures/enemy.png")) return false;
     enemyTexture.setSmooth(false);
 
+    if (!heartTexture.loadFromFile("assets/textures/heart_floor.png")) return false;
+    heartTexture.setSmooth(false);
+
     for (const auto& eData : level.getEnemyData()) {
         Enemy enemy;
         enemy.setTexture(enemyTexture, true);
         enemy.setPosition(eData.position);
         enemy.setRotation(eData.rotation);
         enemies.push_back(enemy);
+    }
+
+    for (const auto& hData : level.getHeartsData()) {
+        sf::Sprite heart(heartTexture);
+        heart.setOrigin(7.5f, 6.5f);
+        heart.setPosition(hData);
+        hearts.push_back(heart);
     }
 
     return true;
@@ -60,6 +70,16 @@ bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixel
                 it--;
             }
         }
+
+        for (auto it = hearts.begin(); it != hearts.end(); ++it) {
+            if (it->getGlobalBounds().intersects(player.getGlobalBounds())) {
+                if (player.getHealth() < 3) {
+                    player.heal();
+                    hearts.erase(it);
+                    it--;
+                }
+            }
+        }
     } else {
         // Reset view to player view if game paused
         // Menu rendering will change the view, so we must reset this
@@ -67,6 +87,10 @@ bool Simulation::update(sf::RenderWindow& window, const sf::Vector2i& mousePixel
     }
         
     window.draw(level);
+
+    for (const auto& heart : hearts)
+        window.draw(heart);
+    
     if (DEBUG && sf::Keyboard::isKeyPressed(sf::Keyboard::Period)) {
         window.draw(player.getBoundingBox());
 

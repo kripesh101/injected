@@ -42,6 +42,7 @@ public:
     const sf::View& getView() const;
     void drawLegs(sf::RenderWindow& window) const;
     void bulletHit();
+    void heal();
     int getHealth() const;
     bool isAlive() const;
 };
