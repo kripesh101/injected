@@ -21,9 +21,6 @@ assets\textures\decorations\doormat.png 205 244 270 0
 assets\textures\decorations\drawer_phone.png 297 424 0 1
 assets\textures\decorations\flower_pot.png 470 554 0 1
 assets\textures\decorations\flower_pot.png 941 426 0 1
-assets\textures\decorations\armchair.png 820 894 180 1
-assets\textures\decorations\tv.png 733 865 0 1
-assets\textures\decorations\table_pizza.png 762 903 270 1
 assets\textures\decorations\table_lines.png 657 1375 90 1
 assets\textures\decorations\vinyl_player.png 709 1423 0 1
 assets\textures\decorations\chair.png 616 1394 270 1
@@ -35,7 +32,7 @@ assets\textures\decorations\kitchen_sink.png 760 1209 90 1
 assets\textures\decorations\sofa_purple.png 1123 1350 90 1
 assets\textures\decorations\bed_pink.png 1221 1175 0 1
 assets\textures\decorations\bed_big.png 1218 1212 0 1
-assets\textures\decorations\tshirt.png 1193 1168 27.5 1
+assets\textures\decorations\tshirt.png 1193 1168 27.5 0
 assets\textures\decorations\table_pizza.png 1085 1358 90 1
 assets\textures\decorations\tv_mini.png 1048 1387 182.5 1
 assets\textures\decorations\table_lines.png 776 1174 0 1
@@ -66,3 +63,6 @@ assets\textures\decorations\table_pizza.png 1555 968 180 1
 assets\textures\decorations\lamp_2.png 1593 1277 0 1
 assets\textures\decorations\lamp_3.png 1954 956 0 1
 assets\textures\decorations\lamp_4.png 1696 832 0 1
+assets\textures\decorations\table_pizza.png 788 861 90 1
+assets\textures\decorations\armchair.png 823 900 180 1
+assets\textures\decorations\tv.png 734 870 0 1

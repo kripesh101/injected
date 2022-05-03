@@ -1,0 +1,7 @@
+MUSIC Perturbator.ogg
+TRANSITION transitions/intro_screen.png
+CREDITS tutorial_text.txt
+LEVEL tutorial/
+CREDITS post_tutorial_text.txt
+LEVEL level1/
+CREDITS credits.txt

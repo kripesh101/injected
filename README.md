@@ -42,6 +42,8 @@ Optionally, you can specify the level you wish to create/modify by passing the p
 Command: `main.exe -editor assets/levels/test_level_1/`.\
 **The `/` at the end is compulsory.**
 
+**DO NOT USE SPACES IN THE NAME OF YOUR LEVEL FOLDER**
+
 ## Editor Controls
 
 Moving around the view is done using the `WASD` keys. Hold `Shift` to speed up the movement. Use the scroll-wheel to adjust the zoom level.
@@ -88,9 +90,9 @@ You can press `R` to reset the rotation if needed.
 
 4. Rotations have no additional impact on the rendering of decorations. Feel free do any rotations with non-collidable decorations!
 
-### Consumeable Hearts
+### Consumable Hearts
 
-Press `H` while in input mode to Consumeable Hearts editing. `Left-click` to place the heart, and `Right-click` to delete a heart.
+Press `H` while in input mode to switch to Consumable Hearts editing. `Left-click` to place the heart, and `Right-click` to delete a heart.
 
 A heart will heal the player 1 health when the player touches it.
 
@@ -146,7 +148,7 @@ Closing the editor will automatically save the level.
 `enemy_spawns.txt` stores Enemy Spawns Data. Format:\
 `<x-coordinate> <y-coordinate> <rotation (in degrees)>`
 
-`hearts.txt` stores Consumeable Hearts Data. Format:\
+`hearts.txt` stores Consumable Hearts Data. Format:\
 `<x-coordinate> <y-coordinate>`
 
 All rotations are clockwise.
