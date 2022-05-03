@@ -32,7 +32,7 @@ bool Shotgun::loadSound() {
     return soundBuffer.loadFromFile("assets/sounds/shotgun.wav");
 }
 
-Rifle::Rifle() : Weapon(soundBuffer, 500.f) {}
+Rifle::Rifle() : Weapon(soundBuffer, 600.f) {}
 Shotgun::Shotgun() : Weapon(soundBuffer, 70.f) {}
 
 void Rifle::shoot(const Level& level, std::vector<Bullet>& bullets, const sf::Sprite& origin, const bool& playerOwned) {

@@ -11,6 +11,7 @@ enum class StepType {
     FADING,
     CREDITS,
     MUSIC,
+    AUDIO,
     AGENT_SELECT
 };
 
@@ -38,6 +39,7 @@ private:
     sf::Font creditsFont;
 
     sf::Music music;
+    sf::Music audioClip;
 
     std::unique_ptr<Simulation> currentSim;
 

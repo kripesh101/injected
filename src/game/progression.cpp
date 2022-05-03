@@ -39,6 +39,14 @@ bool Progression::loadCurrentStep(sf::RenderWindow& window) {
         music.play();
     }
 
+    else if (cType == StepType::AUDIO) {
+        audioClip.stop();
+        audioClip.openFromFile(cPath);
+        audioClip.setLoop(false);
+        audioClip.setVolume(80.f * volume / 100.f);
+        audioClip.play();
+    }
+
     currentType = cType;
 
     return true;
@@ -64,7 +72,7 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
     }
     // Screen fading
     else if (currentType == StepType::FADING) {
-        if (fadeTime > 0) {
+        if (fadeTime > 0.f) {
             if (missionSteps[currentStep].type == StepType::LEVEL)  {
                 currentSim->update(window, mousePixelPos, deltaTime);
             }
@@ -80,6 +88,9 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
             const float fadeFactor = (1.f - (fadeTime / 2.f));
             fadeOverlay.setFillColor(sf::Color(0, 0, 0, 255 * fadeFactor));
             window.draw(fadeOverlay);
+            
+            // Fade out the audio clip
+            audioClip.setVolume((1.f - fadeFactor) * 80.f * volume / 100.f);
 
             // If last step OR next step is music change, fade music
             if ((currentStep + 1) >= missionSteps.size() ||
@@ -89,6 +100,10 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
             }
 
             if (window.hasFocus()) fadeTime -= deltaTime;
+
+            if (fadeTime <= 0.f) {
+                audioClip.stop();
+            }
         
         } else {
             currentStep++;
@@ -132,6 +147,7 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
                 return true;
             } else if (response == RestartMenuEvent::RETURN_MAIN_MENU) {
                 music.stop();
+                audioClip.stop();
                 return true;
             } else if (response == RestartMenuEvent::RESTART) {
                 window.setMouseCursorGrabbed(true);
@@ -155,7 +171,7 @@ bool Progression::update(sf::RenderWindow& window, const sf::Vector2i& mousePixe
         }
     }
     // Music Change
-    else if (currentType == StepType::MUSIC) {
+    else if (currentType == StepType::MUSIC || currentType == StepType::AUDIO) {
         // Skip immediately to next step, as music changing is handled separate of this update function
         currentType = StepType::FADING;
         fadeTime = 0.f;
@@ -194,6 +210,8 @@ bool Progression::onLoad(const std::string& missionFolderPath, sf::RenderWindow&
             step.type = StepType::CREDITS;
         else if (type == "MUSIC")
             step.type = StepType::MUSIC;
+        else if (type == "AUDIO")
+            step.type = StepType::AUDIO;
         else
             valid = false;
 
@@ -233,6 +251,7 @@ Progression::Progression() :
     transitionSprite.setPosition(0.f, 0.f);
 
     music.stop();
+    audioClip.stop();
 }
 
 bool Progression::setPaused(const bool& pause) {
@@ -245,8 +264,14 @@ bool Progression::setPaused(const bool& pause) {
     paused = pause;
     currentSim->setPaused(pause);
 
-    if (pause) music.pause();
-    else music.play();
+    if (pause) {
+        music.pause();
+        if (audioClip.getStatus() == sf::SoundSource::Status::Playing) audioClip.pause();
+    } else {
+        music.play();
+        if (audioClip.getStatus() == sf::SoundSource::Status::Paused) audioClip.play();
+    }
+        
 
     return true;
 }

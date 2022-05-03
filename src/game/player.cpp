@@ -8,12 +8,10 @@ Player::Player(GunType type) :
     boundingBox(sf::Vector2f(16.f, 16.f)),
     view(sf::Vector2f(0.f, 0.f), sf::Vector2f(535.f, 300.f)),
     legs(sf::seconds(0.06f)),
-    speed(140.f),
     health(3),
     hitFade(0.f)
 {
-    if (type == GunType::RIFLE) gun.reset(new Rifle());
-    else gun.reset(new Shotgun());
+    setGunType(type);
 
     setOrigin(24.f, 24.f);
     setPosition(sf::Vector2f(0.f, 0.f));
@@ -197,8 +195,14 @@ bool Player::isAlive() const {
 }
 
 void Player::setGunType(const GunType& type) {
-    if (type == GunType::RIFLE) gun.reset(new Rifle());
-    else gun.reset(new Shotgun());
+    if (type == GunType::RIFLE) {
+        gun.reset(new Rifle());
+        speed = 200.f;
+    }
+    else {
+        gun.reset(new Shotgun());
+        speed = 140.f;
+    }
 }
 
 sf::FloatRect Player::getGlobalBounds() const {

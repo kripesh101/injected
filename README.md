@@ -168,11 +168,17 @@ The specified image file will be loaded and shown to the user, until the user pr
 Format: `TRANSITION <image file path>`
 
 ### `MUSIC`
-The specified music track will start playing, until another `MUSIC` sequence is reached. Having multiple `MUSIC` sequences is handy if you want to use different music tracks for dialogue and gameplay, for example. Similarly, use this if you want different music tracks for each level.
+The specified music track will start playing (in a loop), until another `MUSIC` sequence is reached. Having multiple `MUSIC` sequences is handy if you want to use different music tracks for dialogue and gameplay, for example. Similarly, use this if you want different music tracks for each level.
 
 This is the only way to get music working in INJECTED!, so you must have at least one `MUSIC` sequence (preferably at the start of the mission details file) if you want a track to be played during your mission.
 
 Format: `MUSIC <music file path>`\
+Supported Files: `ogg` and `wav` formats
+
+### `AUDIO`
+Very similar to `MUSIC` in the sense that a specified audio track will start playing. However, this one will not loop. It will automatically fade out during the next fade sequence. Use this for voiceover during transition or credits sequences. You can also use it to play a short audio clip at the beginning of a level.
+
+Format: `AUDIO <audio file path>`\
 Supported Files: `ogg` and `wav` formats
 
 ### `LEVEL`

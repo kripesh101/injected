@@ -74,7 +74,7 @@ bool MainMenu::update(sf::RenderWindow& window, const sf::Vector2i& mousePixelPo
             if (fullscreen)
                 window.create(sf::VideoMode(1200, 640), "INJECTED!", sf::Style::Default, settings);
             else
-                window.create(sf::VideoMode::getFullscreenModes()[0], "INJECTED!", sf::Style::Fullscreen, settings);
+                window.create(sf::VideoMode::getDesktopMode(), "INJECTED!", sf::Style::None, settings);
             
             window.setVerticalSyncEnabled(true);
             fullscreen = !fullscreen;

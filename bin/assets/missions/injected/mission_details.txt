@@ -1,8 +1,13 @@
 MUSIC 16_loop.ogg
+AUDIO transitions/vo1.ogg
 TRANSITION transitions/DIALOGUE1.png
+AUDIO transitions/vo2.ogg
 TRANSITION transitions/DIALOGUE2.png
+AUDIO transitions/vo3.ogg
 TRANSITION transitions/DIALOGUE3.png
+AUDIO transitions/vo4.ogg
 TRANSITION transitions/DIALOGUE4.png
+AUDIO transitions/vo5.ogg
 TRANSITION transitions/DIALOGUE5.png
 MUSIC Perturbator.ogg
 TRANSITION transitions/intro_screen.png
@@ -10,4 +15,7 @@ CREDITS tutorial_text.txt
 LEVEL tutorial/
 CREDITS post_tutorial_text.txt
 LEVEL level1/
+LEVEL testlevel2/
+MUSIC 16_loop.ogg
+AUDIO credits.ogg
 CREDITS credits.txt
