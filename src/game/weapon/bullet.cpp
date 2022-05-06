@@ -37,13 +37,14 @@ bool Bullet::loadBulletTexture() {
 }
 
 bool Bullet::initialCheck(const Level& level) {
-    moveInDirection(20.f);
-
-    if (!level.collides(getGlobalBounds(), true)) {
-        moveInDirection(8.f);
-        return true;
+    moveInDirection(10.f);
+    for (int i = 0; i <= 7; i++) {
+        moveInDirection(2.f);
+        if (level.collides(getPosition(), true))
+            return false;
     }
-    return false;
+
+    return true;
 }
 
 

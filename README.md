@@ -173,7 +173,7 @@ These files are used in the mission select screen in the main menu, when there i
 
 ## Mission Detail File
 
-The `mission_details.txt` file sets the outline for your mission. Each line in the file is a sequence of your mission. There are 4 types of supported sequences:
+The `mission_details.txt` file sets the outline for your mission. Each line in the file is a sequence of your mission. There are 5 types of supported sequences:
 
 ### `TRANSITION`
 The specified image file will be loaded and shown to the user, until the user presses `Left-click`. The next sequence will be played after a 2 second fade. The image file should be of ratio **16:9**. The idea is to use these transitions for storytelling.

@@ -35,16 +35,16 @@ bool Shotgun::loadSound() {
 Rifle::Rifle() : Weapon(soundBuffer, 600.f) {}
 Shotgun::Shotgun() : Weapon(soundBuffer, 70.f) {}
 
-void Rifle::shoot(const Level& level, std::vector<Bullet>& bullets, const sf::Sprite& origin, const bool& playerOwned) {
+void Rifle::shoot(const Level& level, std::vector<Bullet>& bullets, const sf::Sprite& origin, const bool& playerOwned) {   
     if (timeSinceLastShot >= timeBetweenShots) {
         timeSinceLastShot = 0.f;
 
         sound.play();
 
-        int rotation = rand(8);
+        int rotation = rand(6);
         float bulletRotation = origin.getRotation();
-        if (playerOwned) bulletRotation += 4.f - rotation;
-        else bulletRotation += 8.f - rotation * 2;
+        if (playerOwned) bulletRotation += 3.f - rotation;
+        else bulletRotation += 9.f - rotation * 3;
         
         Bullet bullet(playerOwned, origin.getPosition(), bulletRotation);
 
@@ -57,7 +57,12 @@ void Shotgun::shoot(const Level& level, std::vector<Bullet>& bullets, const sf::
         timeSinceLastShot = 0.f;
 
         sound.play();
-        for (int n=0; n != 6; ++n) {
+
+        int bulletCount;
+        if (playerOwned) bulletCount = 6;
+        else bulletCount = 4;
+
+        for (int n=0; n != bulletCount; ++n) {
             int rotation = rand(9, -9);
             int speed = rand(500, 400);
 

@@ -9,7 +9,7 @@ Enemy::Enemy() :
     boundingBox(sf::Vector2f(16.f, 16.f)),
     health(2),
     speed(100.f),
-    playerSeenCooldown(0.55f),
+    playerSeenCooldown(0.45f),
     playerSeen(false),
     hitFade(0.f),
     attackRadius(175.f),
@@ -78,8 +78,11 @@ bool Enemy::update(std::vector<Bullet>& bullets, const Level& level, const Playe
                 return true;
             }
         }
+        else {
+            if (playerSeen) playerSeenCooldown = 0.32f;
+        }
     } else {
-        if (playerSeen) playerSeenCooldown = 0.35f;
+        if (playerSeen) playerSeenCooldown = 0.32f;
     }
 
     return false;
@@ -112,7 +115,7 @@ void Enemy::bulletHit() {
     awarenessRadius = 100.f;
 
     playerSeen = true;
-    if (playerSeenCooldown > 0.25f) playerSeenCooldown = 0.25f;
+    if (playerSeenCooldown > 0.20f) playerSeenCooldown = 0.20f;
 }
 
 bool Enemy::isAlive() const {
